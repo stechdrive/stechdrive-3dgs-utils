@@ -8,6 +8,7 @@ import os
 import shutil
 from pathlib import Path
 
+from core.colmap_cli import prefer_official_windows_launcher
 from core.colmap_mixed_project import COLMAP_MIXED_MANIFEST, colmap_erp_rig_groups_for_images
 from core.colmap_normal_camera_contract import normal_camera_groups_for_images
 from core.dataset_job_spec import metashape_nerf_job, write_dataset_job
@@ -507,14 +508,8 @@ class Step4CommandPlanMixin:
         )
         return build_workflow_job_cmd(self.base_dir, job_path)
 
-    def _default_colmap_executable(self) -> str:
-        return "colmap.exe" if os.name == "nt" else "colmap"
-
     def _default_glomap_executable(self) -> str:
         return "glomap.exe" if os.name == "nt" else "glomap"
-
-    def _default_spheresfm_executable(self) -> str:
-        return "colmap.exe" if os.name == "nt" else "colmap"
 
     @staticmethod
     def _looks_like_path(value: str) -> bool:
@@ -532,19 +527,24 @@ class Step4CommandPlanMixin:
             raise ValueError(i18n.t(message_key).format(path=value))
         return found
 
+    def _resolve_colmap_launcher(self, raw: str, message_key: str) -> str:
+        value = raw.strip()
+        if value:
+            resolved = self._resolve_executable(value, "colmap.exe" if os.name == "nt" else "colmap", message_key)
+            return prefer_official_windows_launcher(resolved)
+
+        default_names = ("COLMAP.bat", "colmap.exe") if os.name == "nt" else ("colmap",)
+        for default_name in default_names:
+            found = shutil.which(default_name)
+            if found:
+                return prefer_official_windows_launcher(found)
+        raise ValueError(i18n.t(message_key).format(path=" / ".join(default_names)))
+
     def _resolve_colmap_executable(self) -> str:
-        return self._resolve_executable(
-            self.colmap_exec_browse.text(),
-            self._default_colmap_executable(),
-            "COLMAP_EXEC_NOT_FOUND",
-        )
+        return self._resolve_colmap_launcher(self.colmap_exec_browse.text(), "COLMAP_EXEC_NOT_FOUND")
 
     def _resolve_spheresfm_executable(self) -> str:
-        return self._resolve_executable(
-            self.spheresfm_exec_browse.text(),
-            self._default_spheresfm_executable(),
-            "SPHERESFM_EXEC_NOT_FOUND",
-        )
+        return self._resolve_colmap_launcher(self.spheresfm_exec_browse.text(), "SPHERESFM_EXEC_NOT_FOUND")
 
     def _resolve_glomap_executable(self) -> str:
         return self._resolve_executable(
@@ -734,6 +734,8 @@ class Step4CommandPlanMixin:
 
     def _build_spheresfm_sfm_commands(self) -> StepCommandQueue:
         matcher = self.spheresfm_matcher_combo.currentData() or _COLMAP_MATCHER_SEQUENTIAL
+        quality_preset = self._spheresfm_quality_preset()
+        use_masks = self._spheresfm_uses_masks()
 
         colmap = self._resolve_spheresfm_executable()
         scene = Path(self.scene_dir)
@@ -746,6 +748,9 @@ class Step4CommandPlanMixin:
                 images_dir=self._metashape_images_dir(),
                 work_dir=self._spheresfm_preflight_dir(),
                 camera_params=self._spheresfm_camera_params_arg(),
+                matcher=matcher,
+                quality_preset=quality_preset,
+                use_masks=use_masks,
             ),
         )
         write_workflow_job(
@@ -755,7 +760,7 @@ class Step4CommandPlanMixin:
                 images_dir=self._metashape_images_dir(),
                 source_masks_dir=self._mask_dir(),
                 output_masks_dir=self._spheresfm_masks_dir(),
-                use_masks=self._spheresfm_uses_masks(),
+                use_masks=use_masks,
             ),
         )
         steps = build_spheresfm_commands(
@@ -766,9 +771,9 @@ class Step4CommandPlanMixin:
                 database=self._spheresfm_database_path(),
                 sparse=self._spheresfm_sparse_dir(),
                 camera_params=self._spheresfm_camera_params_arg(),
-                use_masks=self._spheresfm_uses_masks(),
+                use_masks=use_masks,
                 matcher=matcher,
-                quality_preset=self._spheresfm_quality_preset(),
+                quality_preset=quality_preset,
             )
         )
         return [

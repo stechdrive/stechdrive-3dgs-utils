@@ -7,8 +7,16 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from core.app_job import AppJob, dataset_app_job, sfm_app_job
+from core.colmap_cli import build_colmap_command
 from core.dataset_job_spec import load_dataset_job
 from core.sfm_job_spec import load_sfm_job
+from core.spheresfm_cli_contract import (
+    spheresfm_feature_options,
+    spheresfm_mapper_options,
+    spheresfm_matcher_subcommand,
+    spheresfm_matching_options,
+    spheresfm_sequential_overlap,
+)
 from gui.common.runner_types import ExternalCommandQueue
 
 
@@ -113,14 +121,14 @@ def build_colmap_sfm_commands(options: ColmapSfmCommand) -> ExternalCommandQueue
         steps.append((phase, feature_cmd))
 
     if options.run_rig_config:
-        rig_cmd = [
+        rig_cmd = build_colmap_command(
             options.colmap,
             "rig_configurator",
             "--database_path",
             str(options.database),
             "--rig_config_path",
             str(rig_config),
-        ]
+        )
         steps.append(("colmap_rig_config", rig_cmd))
 
     if options.run_normal_feature and options.normal_feature_groups:
@@ -135,15 +143,15 @@ def build_colmap_sfm_commands(options: ColmapSfmCommand) -> ExternalCommandQueue
         steps.append(("colmap_feature_normal", normal_cmd))
 
     matcher_name = "exhaustive_matcher" if options.matcher == "exhaustive" else "sequential_matcher"
-    matcher_cmd = [
+    matcher_cmd = build_colmap_command(
         options.colmap,
         matcher_name,
         "--database_path",
         str(options.database),
-    ]
+    )
 
     if options.mapper == "global":
-        mapper_cmd = [
+        mapper_cmd = build_colmap_command(
             options.colmap,
             "global_mapper",
             "--database_path",
@@ -152,7 +160,9 @@ def build_colmap_sfm_commands(options: ColmapSfmCommand) -> ExternalCommandQueue
             str(options.images_dir),
             "--output_path",
             str(options.sparse),
-        ]
+            "--GlobalMapper.multiple_models",
+            "0",
+        )
     elif options.mapper == "glomap":
         mapper_cmd = [
             options.glomap,
@@ -165,7 +175,7 @@ def build_colmap_sfm_commands(options: ColmapSfmCommand) -> ExternalCommandQueue
             str(options.sparse),
         ]
     else:
-        mapper_cmd = [
+        mapper_cmd = build_colmap_command(
             options.colmap,
             "mapper",
             "--database_path",
@@ -174,7 +184,7 @@ def build_colmap_sfm_commands(options: ColmapSfmCommand) -> ExternalCommandQueue
             str(options.images_dir),
             "--output_path",
             str(options.sparse),
-        ]
+        )
         if options.run_rig_config:
             mapper_cmd.extend(["--Mapper.ba_refine_sensor_from_rig", "1"])
 
@@ -193,7 +203,7 @@ def _rig_feature_cmd(
     camera_params: str,
     image_list: Path | None,
 ) -> list[str]:
-    cmd = [
+    cmd = build_colmap_command(
         options.colmap,
         "feature_extractor",
         "--database_path",
@@ -206,7 +216,7 @@ def _rig_feature_cmd(
         "PINHOLE",
         "--ImageReader.camera_params",
         camera_params,
-    ]
+    )
     if image_list is not None:
         cmd.extend(["--image_list_path", str(image_list)])
     if _should_use_colmap_masks(options):
@@ -220,7 +230,7 @@ def _normal_feature_cmd(
     *,
     image_list: Path | None,
 ) -> list[str]:
-    cmd = [
+    cmd = build_colmap_command(
         options.colmap,
         "feature_extractor",
         "--database_path",
@@ -231,7 +241,7 @@ def _normal_feature_cmd(
         "1",
         "--ImageReader.camera_model",
         camera_model,
-    ]
+    )
     if image_list is not None:
         cmd.extend(["--image_list_path", str(image_list)])
     if _should_use_colmap_masks(options):
@@ -243,122 +253,18 @@ def _should_use_colmap_masks(options: ColmapSfmCommand) -> bool:
     return options.writes_masks or (options.use_existing_masks and options.masks_dir.is_dir())
 
 
-def _spheresfm_feature_options(preset: str) -> list[str]:
-    if preset == "fast":
-        max_image_size = "3200"
-        max_num_features = "8192"
-    elif preset in {"quality", "robust"}:
-        max_image_size = "5000"
-        max_num_features = "32768"
-    else:
-        max_image_size = "4096"
-        max_num_features = "16384"
-    return [
-        "--FeatureExtraction.use_gpu",
-        "1",
-        "--FeatureExtraction.max_image_size",
-        max_image_size,
-        "--SiftExtraction.max_num_features",
-        max_num_features,
-    ]
-
-
-def _spheresfm_matching_options(preset: str) -> list[str]:
-    max_num_matches = "16384" if preset == "fast" else "32768"
-    options = [
-        "--TwoViewGeometry.max_error",
-        "4",
-        "--TwoViewGeometry.min_num_inliers",
-        "50",
-        "--FeatureMatching.max_num_matches",
-        max_num_matches,
-    ]
-    if preset in {"quality", "robust"}:
-        options.extend(["--FeatureMatching.guided_matching", "1"])
-    return options
-
-
-def _spheresfm_sequential_overlap(preset: str) -> str:
-    if preset == "fast":
-        return "5"
-    if preset in {"quality", "robust"}:
-        return "15"
-    return "10"
-
-
-def _spheresfm_mapper_options(preset: str) -> list[str]:
-    options = [
-        "--Mapper.ba_refine_focal_length",
-        "0",
-        "--Mapper.ba_refine_principal_point",
-        "0",
-        "--Mapper.ba_refine_extra_params",
-        "0",
-        "--Mapper.multiple_models",
-        "0",
-    ]
-    if preset == "fast":
-        options.extend(
-            [
-                "--Mapper.ba_local_max_num_iterations",
-                "12",
-                "--Mapper.ba_global_max_num_iterations",
-                "25",
-                "--Mapper.ba_local_max_refinements",
-                "1",
-                "--Mapper.ba_global_max_refinements",
-                "2",
-                "--Mapper.ba_global_images_ratio",
-                "1.3",
-                "--Mapper.ba_global_points_ratio",
-                "1.3",
-            ]
-        )
-    elif preset in {"quality", "robust"}:
-        options.extend(
-            [
-                "--Mapper.ba_local_max_num_iterations",
-                "30",
-                "--Mapper.ba_global_max_num_iterations",
-                "75",
-                "--Mapper.ba_local_max_refinements",
-                "3",
-                "--Mapper.ba_global_max_refinements",
-                "5",
-            ]
-        )
-    else:
-        options.extend(
-            [
-                "--Mapper.ba_local_max_num_iterations",
-                "16",
-                "--Mapper.ba_global_max_num_iterations",
-                "33",
-                "--Mapper.ba_local_max_refinements",
-                "2",
-                "--Mapper.ba_global_max_refinements",
-                "2",
-                "--Mapper.ba_global_images_ratio",
-                "1.2",
-                "--Mapper.ba_global_points_ratio",
-                "1.2",
-            ]
-        )
-    return options
-
-
 def build_spheresfm_commands(options: SphereSfmCommand) -> ExternalCommandQueue:
     options.sparse.mkdir(parents=True, exist_ok=True)
     options.database.parent.mkdir(parents=True, exist_ok=True)
 
-    database_cmd = [
+    database_cmd = build_colmap_command(
         options.colmap,
         "database_creator",
         "--database_path",
         str(options.database),
-    ]
+    )
 
-    feature_cmd = [
+    feature_cmd = build_colmap_command(
         options.colmap,
         "feature_extractor",
         "--database_path",
@@ -371,34 +277,36 @@ def build_spheresfm_commands(options: SphereSfmCommand) -> ExternalCommandQueue:
         options.camera_params,
         "--ImageReader.single_camera",
         "1",
-    ]
+    )
     if options.use_masks:
         feature_cmd.extend(["--ImageReader.mask_path", str(options.prepared_masks_dir)])
-    feature_cmd.extend(_spheresfm_feature_options(options.quality_preset))
+    feature_cmd.extend(spheresfm_feature_options(options.quality_preset))
 
     if options.matcher == "spatial":
-        matcher_cmd = [
+        matcher_cmd = build_colmap_command(
             options.colmap,
             "spatial_matcher",
             "--database_path",
             str(options.database),
             "--SpatialMatching.max_distance",
             "50",
-        ]
-        matcher_cmd.extend(_spheresfm_matching_options(options.quality_preset))
+        )
+        matcher_cmd.extend(spheresfm_matching_options(options.quality_preset))
     else:
-        matcher_name = "exhaustive_matcher" if options.matcher == "exhaustive" else "sequential_matcher"
-        matcher_cmd = [
+        matcher_name = spheresfm_matcher_subcommand(options.matcher)
+        matcher_cmd = build_colmap_command(
             options.colmap,
             matcher_name,
             "--database_path",
             str(options.database),
-        ]
-        matcher_cmd.extend(_spheresfm_matching_options(options.quality_preset))
+        )
+        matcher_cmd.extend(spheresfm_matching_options(options.quality_preset))
         if options.matcher != "exhaustive":
-            matcher_cmd.extend(["--SequentialMatching.overlap", _spheresfm_sequential_overlap(options.quality_preset)])
+            matcher_cmd.extend(
+                ["--SequentialMatching.overlap", spheresfm_sequential_overlap(options.quality_preset)]
+            )
 
-    mapper_cmd = [
+    mapper_cmd = build_colmap_command(
         options.colmap,
         "mapper",
         "--database_path",
@@ -407,8 +315,8 @@ def build_spheresfm_commands(options: SphereSfmCommand) -> ExternalCommandQueue:
         str(options.images_dir),
         "--output_path",
         str(options.sparse),
-    ]
-    mapper_cmd.extend(_spheresfm_mapper_options(options.quality_preset))
+    )
+    mapper_cmd.extend(spheresfm_mapper_options(options.quality_preset))
 
     return [
         ("spheresfm_database", database_cmd),

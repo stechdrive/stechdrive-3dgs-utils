@@ -6,6 +6,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from core.cancellation import CancellationToken, raise_if_cancelled
+from core.colmap_cli import build_colmap_command
 from core.colmap_rig_export import prepare_views_for_colmap, write_rig_config_json
 from core.cubemap_export_metadata import (
     collect_image_files,
@@ -394,7 +395,12 @@ def _run_spheresfm_preflight(job: dict, *, cancel_event: CancellationToken | Non
     images = iter_spheresfm_images(images_dir)
     if not images:
         raise FileNotFoundError(f"No supported images found: {images_dir}")
-    validate_spheresfm_colmap(colmap)
+    validate_spheresfm_colmap(
+        colmap,
+        matcher=str(job["matcher"]),
+        quality_preset=str(job["quality_preset"]),
+        use_masks=bool(job["use_masks"]),
+    )
 
     preflight_images = reset_preflight_workspace(work_dir)
     source = images[0]
@@ -405,7 +411,7 @@ def _run_spheresfm_preflight(job: dict, *, cancel_event: CancellationToken | Non
     raise_if_cancelled(cancel_event)
     database = work_dir / "database.db"
     run_spheresfm_preflight_colmap_command(
-        [colmap, "database_creator", "--database_path", str(database)],
+        build_colmap_command(colmap, "database_creator", "--database_path", str(database)),
         "COLMAP spherical preflight database_creator",
         cancel_event=cancel_event,
     )
@@ -428,7 +434,7 @@ def _run_spheresfm_prepare(job: dict, *, cancel_event: CancellationToken | None 
     images = iter_spheresfm_images(images_dir)
     if not images:
         raise FileNotFoundError(f"No supported images found: {images_dir}")
-    validate_spheresfm_colmap(colmap)
+    validate_spheresfm_colmap(colmap, check_capabilities=False)
 
     if bool(job.get("use_masks")):
         source_masks_dir = Path(str(job["source_masks_dir"]))

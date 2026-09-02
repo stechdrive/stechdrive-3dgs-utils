@@ -35,7 +35,7 @@ def preflight_spheresfm(scene_or_inventory: str | Path | SceneInventory) -> SfmP
         issues.append(
             PreflightIssue(
                 "no_images",
-                "COLMAP 4.1 spherical SfM requires equirectangular 360 images in images/.",
+                "COLMAP spherical SfM requires equirectangular 360 images in images/.",
             )
         )
         return SfmPreflightResult(route="spheresfm", ok=False, issues=tuple(issues))
@@ -46,7 +46,7 @@ def preflight_spheresfm(scene_or_inventory: str | Path | SceneInventory) -> SfmP
         issues.append(
             PreflightIssue(
                 "requires_equirectangular_only",
-                "COLMAP 4.1 spherical SfM supports only equirectangular 360 images. "
+                "COLMAP spherical SfM supports only equirectangular 360 images. "
                 f"Non-ERP images detected: {preview}",
             )
         )
@@ -57,7 +57,7 @@ def preflight_spheresfm(scene_or_inventory: str | Path | SceneInventory) -> SfmP
         issues.append(
             PreflightIssue(
                 "requires_single_resolution",
-                "COLMAP 4.1 spherical SfM requires all source images to have the same resolution. "
+                "COLMAP spherical SfM requires all source images to have the same resolution. "
                 f"Detected sizes: {preview or 'unknown'}",
             )
         )

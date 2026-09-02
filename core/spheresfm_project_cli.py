@@ -11,12 +11,14 @@ from core.spheresfm_project import iter_images, prepare_masks, validate_spheresf
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Prepare masks and validate a COLMAP 4.1+ executable.")
-    parser.add_argument("--colmap", required=True, help="COLMAP 4.1+ executable")
+    parser = argparse.ArgumentParser(description="Prepare masks and validate a COLMAP spherical SfM launcher.")
+    parser.add_argument("--colmap", required=True, help="COLMAP 4.1+ executable or Windows COLMAP.bat launcher")
     parser.add_argument("--images-dir", required=True, type=Path)
     parser.add_argument("--source-masks-dir", type=Path)
     parser.add_argument("--output-masks-dir", type=Path)
     parser.add_argument("--use-masks", action="store_true")
+    parser.add_argument("--matcher", choices=("sequential", "exhaustive", "spatial"), default="sequential")
+    parser.add_argument("--quality-preset", choices=("fast", "standard", "quality"), default="standard")
     return parser
 
 
@@ -29,7 +31,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not images:
         raise FileNotFoundError(f"No supported images found: {images_dir}")
 
-    validate_spheresfm_colmap(args.colmap)
+    validate_spheresfm_colmap(
+        args.colmap,
+        matcher=args.matcher,
+        quality_preset=args.quality_preset,
+        use_masks=args.use_masks,
+    )
 
     if args.use_masks:
         if args.source_masks_dir is None or not args.source_masks_dir.is_dir():

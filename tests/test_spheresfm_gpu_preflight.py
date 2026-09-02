@@ -44,7 +44,7 @@ def test_preflight_copies_one_image_and_runs_gpu_sift(
         return subprocess.CompletedProcess(cmd, 0, stdout=f"{cmd[1]} ok\n", stderr="")
 
     monkeypatch.setattr(preflight.subprocess, "run", fake_run)
-    monkeypatch.setattr(preflight, "validate_spheresfm_colmap", lambda _colmap: None)
+    monkeypatch.setattr(preflight, "validate_spheresfm_colmap", lambda _colmap, **_kwargs: None)
 
     assert preflight.main(
         [
@@ -82,7 +82,7 @@ def test_preflight_rejects_unscoped_work_dir(tmp_path: Path, monkeypatch: pytest
     images_dir.mkdir()
     (images_dir / "frame_0001.jpg").write_bytes(b"image")
 
-    monkeypatch.setattr(preflight, "validate_spheresfm_colmap", lambda _colmap: None)
+    monkeypatch.setattr(preflight, "validate_spheresfm_colmap", lambda _colmap, **_kwargs: None)
     with pytest.raises(ValueError, match="preflight"):
         preflight.main(
             [

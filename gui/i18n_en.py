@@ -464,7 +464,7 @@ STRINGS: dict[str, str] = {
     "SFM_SELECT_ROUTE": "Choose Route",
     "SFM_BACK_TO_ROUTES": "← SfM Routes",
     "SFM_RUN_COLMAP": "Run COLMAP SfM",
-    "SFM_RUN_SPHERESFM": "Run COLMAP 4.1 Spherical SfM",
+    "SFM_RUN_SPHERESFM": "Run COLMAP Spherical SfM",
     "SFM_RUN_REALITYSCAN": "Create RealityScan Data",
     "SFM_OPEN_VIEWER": "Inspect SfM Result",
     "SFM_ROUTE_EXTERNAL_TITLE": "Use Existing SfM Result",
@@ -476,16 +476,16 @@ STRINGS: dict[str, str] = {
     "SFM_ROUTE_COLMAP_TITLE": "Run COLMAP SfM",
     "SFM_ROUTE_COLMAP_BODY": "Expand 360° images into Cubemap rigs, keep normal images as normal cameras, then create camera poses and a sparse point cloud with COLMAP.",
     "SFM_ROUTE_COLMAP_FOOTER": "Output: output/colmap_rig/",
-    "SFM_ROUTE_SPHERESFM_TITLE": "Run COLMAP 4.1 Spherical SfM",
-    "SFM_ROUTE_SPHERESFM_BODY": "Process same-resolution equirectangular 360° images with COLMAP 4.1's native EQUIRECTANGULAR camera to create camera poses and a sparse point cloud.",
+    "SFM_ROUTE_SPHERESFM_TITLE": "Run COLMAP Spherical SfM",
+    "SFM_ROUTE_SPHERESFM_BODY": "Process same-resolution equirectangular 360° images with COLMAP's native EQUIRECTANGULAR camera to create camera poses and a sparse point cloud.",
     "SFM_ROUTE_SPHERESFM_FOOTER": "Output: output/colmap_equirect/",
     "SFM_ROUTE_VIEWER_TITLE": "Inspect SfM Result",
     "SFM_ROUTE_VIEWER_BODY": "Open a read-only viewer for existing camera poses, sparse points, and image links.",
     "SFM_ROUTE_VIEWER_FOOTER": "Inspect: sparse / transforms / pointcloud",
     "SFM_COLMAP_DETAIL_TITLE": "Run COLMAP SfM",
     "SFM_COLMAP_DETAIL_DESC": "Automatically prepare Cubemap rigs for 360° images and normal camera inputs for normal images, then estimate camera poses and a sparse point cloud with COLMAP or GLOMAP. Training dataset conversion is handled in the next step.",
-    "SFM_SPHERESFM_DETAIL_TITLE": "Run COLMAP 4.1 Spherical SfM",
-    "SFM_SPHERESFM_DETAIL_DESC": "Process same-resolution 360° images with official COLMAP 4.1 EQUIRECTANGULAR cameras and create a sparse model containing camera poses and points. Cubemap or GUT conversion from that sparse result is handled in the dataset step.",
+    "SFM_SPHERESFM_DETAIL_TITLE": "Run COLMAP Spherical SfM",
+    "SFM_SPHERESFM_DETAIL_DESC": "Process same-resolution 360° images with official COLMAP EQUIRECTANGULAR cameras and create a sparse model containing camera poses and points. Cubemap or GUT conversion from that sparse result is handled in the dataset step.",
     "SFM_REALITYSCAN_DETAIL_TITLE": "Metashape → RealityScan Data",
     "SFM_REALITYSCAN_DETAIL_DESC": "Create Cubemap images and XMP files for RealityScan from a Metashape SfM result. Images in the Metashape XML go to images/_geometry; registered images missing from the XML go to extra_images/_geometry. Masks are written to each _mask layer.",
     # Step 5
@@ -585,9 +585,9 @@ STRINGS: dict[str, str] = {
     "METHOD_SPHERESFM": "COLMAP Spherical",
     "COLMAP_PIPELINE_SECTION": "COLMAP Run Settings",
     "COLMAP_REPOSITORY_LINK": "COLMAP GitHub",
-    "COLMAP_EXECUTABLE": "COLMAP Executable",
+    "COLMAP_EXECUTABLE": "COLMAP Launcher",
     "GLOMAP_EXECUTABLE": "GLOMAP Executable",
-    "SPHERESFM_EXECUTABLE": "COLMAP 4.1 Executable",
+    "SPHERESFM_EXECUTABLE": "COLMAP Launcher",
     "SPHERESFM_REPOSITORY_LINK": "COLMAP GitHub",
     "SPHERESFM_USE_MASKS": "Use masks/",
     "SPHERESFM_QUALITY_COMPACT": "SfM Quality:",
@@ -600,19 +600,19 @@ STRINGS: dict[str, str] = {
     "SPHERESFM_RESULT_NOT_FOUND": "Spherical COLMAP sparse model was not found: {path}",
     "SPHERESFM_OPEN_GUI_FAILED": "Could not start the COLMAP GUI.",
     "SPHERESFM_OPEN_GUI_FAILED_DETAIL": (
-        "Could not start the COLMAP GUI.\n\nExecutable: {exe}\nSfM result: {model}\n\nDetails:\n{detail}"
+        "Could not start the COLMAP GUI.\n\nLauncher: {exe}\nSfM result: {model}\n\nDetails:\n{detail}"
     ),
     "SPHERESFM_OPEN_GUI_UNAVAILABLE": (
-        "The selected COLMAP executable cannot start the COLMAP GUI.\n\n"
-        "This button requires a colmap executable built with Qt GUI support. "
+        "The selected COLMAP launcher cannot start the COLMAP GUI.\n\n"
+        "This button requires a COLMAP package built with Qt GUI support. "
         "The SfM result itself is still saved.\n\n"
-        "Executable: {exe}\n"
+        "Launcher: {exe}\n"
         "SfM result: {model}\n\n"
         "COLMAP output:\n{detail}"
     ),
-    "SPHERESFM_EXEC_NOT_FOUND": "COLMAP 4.1+ executable was not found. Select the installed colmap executable: {path}",
+    "SPHERESFM_EXEC_NOT_FOUND": "A COLMAP 4.1+ launcher was not found. Select COLMAP.bat or colmap.exe: {path}",
     "SPHERESFM_MASKS_NOT_FOUND": "Use masks/ is enabled, but the mask folder was not found: {path}",
-    "SPHERESFM_PREFLIGHT_FAILED": "COLMAP 4.1 spherical SfM can only use same-resolution equirectangular 360° images.\n{details}",
+    "SPHERESFM_PREFLIGHT_FAILED": "COLMAP spherical SfM can only use same-resolution equirectangular 360° images.\n{details}",
     "COLMAP_MIXED_PREFLIGHT_FAILED": "COLMAP SfM input could not be validated.\n{details}",
     "SPHERESFM_CONVERT_ONLY_NO_SPARSE": "Spherical COLMAP sparse model was not found: {path}\nTurn on the SfM sub-stage first to create a sparse model.",
     "SPHERESFM_POSE_REQUIRED": "Spatial matcher requires pose priors in the COLMAP database.",
@@ -620,7 +620,7 @@ STRINGS: dict[str, str] = {
     "SPHERESFM_RTX50_CUDA_ERROR_TITLE": "COLMAP CUDA compatibility error",
     "SPHERESFM_RTX50_CUDA_ERROR_BODY": (
         "COLMAP GPU processing stopped with a CUDA architecture mismatch error commonly seen on RTX 50-series GPUs.\n\n"
-        "The selected colmap.exe was probably not built for RTX 50-series GPUs (sm_120). "
+        "The selected COLMAP package was probably not built for RTX 50-series GPUs (sm_120). "
         "Select a COLMAP build made with CUDA 13.x or newer and CMAKE_CUDA_ARCHITECTURES=120.\n\n"
         "Log: {log_path}"
     ),
@@ -658,7 +658,7 @@ STRINGS: dict[str, str] = {
     "PHASE_TRAINING_POSTSHOT": "Postshot Training",
     "PHASE_TRAINING_BRUSH": "Brush Training",
     "PHASE_TRAINING_GSPLAT": "gsplat Training",
-    "COLMAP_EXEC_NOT_FOUND": "COLMAP executable was not found. Select the installed colmap executable: {path}",
+    "COLMAP_EXEC_NOT_FOUND": "A COLMAP launcher was not found. Select COLMAP.bat or colmap.exe: {path}",
     "GLOMAP_EXEC_NOT_FOUND": "GLOMAP executable was not found. Select glomap executable when using GLOMAP: {path}",
     "TRAINING_EXEC_NOT_FOUND": "Training executable was not found. Select the installed training application executable: {path}",
     "TRAINING_REQUIRES_DATASET_OUTPUT": "No training dataset was found. Create one in the Dataset step first, or select an input dataset.",
@@ -1178,7 +1178,7 @@ STRINGS: dict[str, str] = {
     "STEP4_PIPELINE_DETAIL_COLMAP_OFF": "COLMAP SfM will not run this time. Click the circle button if you need it.",
     "STEP4_PIPELINE_DETAIL_COLMAP_NEEDS_RIG": "COLMAP SfM needs Cubemap conversion output. Enable Cubemap conversion too, or provide an existing COLMAP Rig output.",
     "STEP4_PIPELINE_DETAIL_COLMAP_NEEDS_POSES": "Run COLMAP SfM or provide an existing sparse model.",
-    "STEP4_PIPELINE_DETAIL_SPHERESFM_RUNS": "COLMAP 4.1 spherical SfM will run in this job.",
+    "STEP4_PIPELINE_DETAIL_SPHERESFM_RUNS": "COLMAP spherical SfM will run in this job.",
     "STEP4_PIPELINE_DETAIL_SPHERESFM_READY": "An existing spherical COLMAP sparse model is available.",
     "STEP4_PIPELINE_DETAIL_SPHERESFM_OFF": "COLMAP spherical SfM will not run this time. Click the circle button if you need it.",
     "STEP4_PIPELINE_DETAIL_SPHERESFM_NEEDS_SPARSE": "Convert-only mode needs an existing sparse model.",
@@ -1296,7 +1296,7 @@ TIPS: dict[str, str] = {
     "SFM_SELECT_ROUTE": "Choose an SfM route from the cards. COLMAP and COLMAP spherical SfM are configured and run inside this step.",
     "SFM_BACK_TO_ROUTES": "Return to the SfM route cards.",
     "SFM_RUN_COLMAP": "Prepare Cubemap view images and run COLMAP/GLOMAP SfM.",
-    "SFM_RUN_SPHERESFM": "Create a sparse model from 360 images with official COLMAP 4.1 EQUIRECTANGULAR cameras.",
+    "SFM_RUN_SPHERESFM": "Create a sparse model from 360 images with official COLMAP EQUIRECTANGULAR cameras.",
     "SFM_RUN_REALITYSCAN": "Create Cubemap images and XMP files for RealityScan realignment from a Metashape camera XML.",
     "SFM_OPEN_VIEWER": "Open a read-only viewer for SfM results and dataset outputs in the current scene.",
     "SFM_ROUTE_EXTERNAL": "Use camera results already prepared in Metashape, RealityScan, COLMAP, spherical COLMAP, or another SfM tool. Step 4 has nothing to run for this route.",
@@ -1549,9 +1549,9 @@ TIPS: dict[str, str] = {
     "POSTSHOT_EXPORT_SPLAT": "Optional PLY or SPZ export path after training. A bare filename is written under Training Output.",
     "COLMAP_REPOSITORY_LINK": "Open the official COLMAP GitHub repository for COLMAP source and build information.",
     "SPHERESFM_REPOSITORY_LINK": "Open the official COLMAP GitHub repository. COLMAP is not bundled with this app.",
-    "COLMAP_EXECUTABLE": "Path to the colmap executable for this machine. Leave empty to resolve colmap from PATH.",
+    "COLMAP_EXECUTABLE": "Select the COLMAP launcher. For an official Windows package, choose COLMAP.bat; selecting its bin/colmap.exe also switches to the packaged launcher automatically.",
     "GLOMAP_EXECUTABLE": "Path to glomap executable when using the legacy GLOMAP mapper. Not needed for COLMAP Global Mapper.",
-    "SPHERESFM_EXECUTABLE": "Select an official COLMAP 4.1+ executable. This route uses the native EQUIRECTANGULAR camera model for spherical-image SfM.",
+    "SPHERESFM_EXECUTABLE": "Select an official COLMAP 4.1+ launcher (4.2 recommended). For a Windows package, choose COLMAP.bat. This route uses the native EQUIRECTANGULAR camera model.",
     "SPHERESFM_USE_MASKS": "When enabled, Step 3 masks are used as excluded areas during SfM. The app automatically converts them to the required format.",
     "SPHERESFM_MATCHER": (
         "Sequential is fast and suited to ordered video frames.\n"
@@ -1559,7 +1559,7 @@ TIPS: dict[str, str] = {
         "Spatial uses pose priors already present in the COLMAP database."
     ),
     "SPHERESFM_QUALITY_PRESET": "Fast shortens processing time. Standard balances processing time and SfM result quality. Quality spends more time estimating camera positions and sparse points more carefully.",
-    "SPHERESFM_POSE_FILE": "Legacy setting retained for old project files. Official COLMAP 4.1 spherical SfM does not import this file here.",
+    "SPHERESFM_POSE_FILE": "Legacy setting retained for old project files. Official COLMAP spherical SfM does not import this file here.",
     "SPHERESFM_OPEN_GUI": "Open the COLMAP spherical SfM result in COLMAP GUI to inspect camera positions and sparse points. Display requires a GUI-capable COLMAP build.",
     "SCENE_PREVIEW_OPEN": "Open a read-only preview of SfM results or dataset output to inspect cameras, points, and image links.",
     "SCENE_PREVIEW_SELECT_SCENE": "Select the scene folder to inspect in the read-only preview.",

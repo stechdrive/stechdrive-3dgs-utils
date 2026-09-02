@@ -1,8 +1,8 @@
 """Convert a spherical COLMAP sparse model to equirectangular transforms.json.
 
 COLMAP 4.1+ writes native EQUIRECTANGULAR camera models (model id 17). Older
-SphereSfM sparse models used SPHERE (model id 11), so both are accepted for
-conversion.
+SphereSfM sparse models used SPHERE under the now-conflicting model id 11, so
+legacy binary parsing is enabled only for this conversion route.
 """
 from __future__ import annotations
 
@@ -80,7 +80,7 @@ def convert(
     opengl_camera: bool = True,
     write_pointcloud: bool = True,
 ) -> dict:
-    cameras, images, points, resolved_model = read_model(model_dir)
+    cameras, images, points, resolved_model = read_model(model_dir, allow_legacy_sphere_binary=True)
     if not images:
         raise ValueError(f"No registered images found in sparse model: {resolved_model}")
 

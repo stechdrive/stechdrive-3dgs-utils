@@ -224,10 +224,11 @@ class SfmStep(BaseStepWidget):
         add_tooltip_row(form, i18n.t("OUTPUT_SCALE"), self.colmap_scale_combo, i18n.tip("OUTPUT_SCALE"))
 
         exe_filter = "Executable (*.exe);;All (*.*)" if os.name == "nt" else "All (*)"
+        colmap_filter = "COLMAP launcher (*.bat *.cmd *.exe);;All (*.*)" if os.name == "nt" else "All (*)"
         self.colmap_exec_browse = BrowseWidget(
             mode="file",
-            filter_str=exe_filter,
-            placeholder="colmap.exe" if os.name == "nt" else "colmap",
+            filter_str=colmap_filter,
+            placeholder="COLMAP.bat / colmap.exe" if os.name == "nt" else "colmap",
         )
         self.colmap_exec_browse.setToolTip(i18n.tip("COLMAP_EXECUTABLE"))
         add_tooltip_row(
@@ -282,11 +283,11 @@ class SfmStep(BaseStepWidget):
         form = QFormLayout()
         form.setSpacing(6)
 
-        exe_filter = "Executable (*.exe);;All (*.*)" if os.name == "nt" else "All (*)"
+        colmap_filter = "COLMAP launcher (*.bat *.cmd *.exe);;All (*.*)" if os.name == "nt" else "All (*)"
         self.spheresfm_exec_browse = BrowseWidget(
             mode="file",
-            filter_str=exe_filter,
-            placeholder="colmap.exe" if os.name == "nt" else "colmap",
+            filter_str=colmap_filter,
+            placeholder="COLMAP.bat / colmap.exe" if os.name == "nt" else "colmap",
         )
         self.spheresfm_exec_browse.setToolTip(i18n.tip("SPHERESFM_EXECUTABLE"))
         add_tooltip_row(

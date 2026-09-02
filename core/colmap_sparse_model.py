@@ -30,11 +30,20 @@ CAMERA_MODELS = [
     CameraModel(8, "SIMPLE_RADIAL_FISHEYE", 4),
     CameraModel(9, "RADIAL_FISHEYE", 5),
     CameraModel(10, "THIN_PRISM_FISHEYE", 12),
-    CameraModel(11, "SPHERE", 3),
+    CameraModel(11, "RAD_TAN_THIN_PRISM_FISHEYE", 16),
+    CameraModel(12, "SIMPLE_DIVISION", 4),
+    CameraModel(13, "DIVISION", 5),
+    CameraModel(14, "SIMPLE_FISHEYE", 3),
+    CameraModel(15, "FISHEYE", 4),
+    CameraModel(16, "EUCM", 6),
     CameraModel(17, "EQUIRECTANGULAR", 2),
 ]
+LEGACY_SPHERE_CAMERA_MODEL = CameraModel(11, "SPHERE", 3)
 CAMERA_MODEL_IDS = {model.model_id: model for model in CAMERA_MODELS}
-CAMERA_MODEL_NAMES = {model.name: model for model in CAMERA_MODELS}
+CAMERA_MODEL_NAMES = {
+    **{model.name: model for model in CAMERA_MODELS},
+    LEGACY_SPHERE_CAMERA_MODEL.name: LEGACY_SPHERE_CAMERA_MODEL,
+}
 
 
 @dataclass(frozen=True)
@@ -142,13 +151,13 @@ def read_cameras_text(path: Path) -> dict[int, Camera]:
     return cameras
 
 
-def read_cameras_binary(path: Path) -> dict[int, Camera]:
+def _read_cameras_binary_with_models(path: Path, models: dict[int, CameraModel]) -> dict[int, Camera]:
     cameras: dict[int, Camera] = {}
     with path.open("rb") as fid:
         num_cameras = read_next_bytes(fid, 8, "Q")[0]
         for _ in range(num_cameras):
             camera_id, model_id, width, height = read_next_bytes(fid, 24, "iiQQ")
-            model = CAMERA_MODEL_IDS.get(model_id)
+            model = models.get(model_id)
             if model is None:
                 raise ValueError(f"Unsupported camera model id {model_id} in {path}")
             params = read_next_bytes(fid, 8 * model.num_params, "d" * model.num_params)
@@ -159,7 +168,27 @@ def read_cameras_binary(path: Path) -> dict[int, Camera]:
                 int(height),
                 tuple(float(v) for v in params),
             )
+        if fid.read(1):
+            raise ValueError(f"Unexpected trailing data in {path}")
     return cameras
+
+
+def read_cameras_binary(path: Path, *, allow_legacy_sphere: bool = False) -> dict[int, Camera]:
+    """Read official COLMAP camera IDs, optionally retrying old SphereSfM id 11."""
+
+    try:
+        return _read_cameras_binary_with_models(path, CAMERA_MODEL_IDS)
+    except (EOFError, ValueError) as official_error:
+        if not allow_legacy_sphere:
+            raise
+        legacy_models = {**CAMERA_MODEL_IDS, LEGACY_SPHERE_CAMERA_MODEL.model_id: LEGACY_SPHERE_CAMERA_MODEL}
+        try:
+            return _read_cameras_binary_with_models(path, legacy_models)
+        except (EOFError, ValueError) as legacy_error:
+            raise ValueError(
+                f"Could not parse official COLMAP or legacy SphereSfM cameras from {path}: "
+                f"official={official_error}; legacy={legacy_error}"
+            ) from official_error
 
 
 def read_images_text(path: Path) -> dict[int, ImagePose]:
@@ -248,12 +277,19 @@ def read_points3d_binary(path: Path) -> dict[int, Point3D]:
     return points
 
 
-def read_model(path: Path) -> tuple[dict[int, Camera], dict[int, ImagePose], dict[int, Point3D], Path]:
+def read_model(
+    path: Path,
+    *,
+    allow_legacy_sphere_binary: bool = False,
+) -> tuple[dict[int, Camera], dict[int, ImagePose], dict[int, Point3D], Path]:
     model_dir = resolve_model_dir(path)
     ext = model_extension(model_dir)
     if ext == ".bin":
         return (
-            read_cameras_binary(model_dir / "cameras.bin"),
+            read_cameras_binary(
+                model_dir / "cameras.bin",
+                allow_legacy_sphere=allow_legacy_sphere_binary,
+            ),
             read_images_binary(model_dir / "images.bin"),
             read_points3d_binary(model_dir / "points3D.bin"),
             model_dir,

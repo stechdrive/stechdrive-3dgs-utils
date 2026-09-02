@@ -6,7 +6,7 @@
 
 360°動画、通常動画、連番静止画から、3D Gaussian Splatting (3DGS) 向けの画像・マスク・カメラデータを作るWindows GUIアプリです。
 
-主な用途は、Insta360 / Osmo 360などのERP/エクイレクタングラー素材を整理・マスクしてMetashapeでSfMし、その結果をPostshot、Brush、LichtFeld Studio、COLMAP形式、RealityScan再アライン向けデータへ変換するワークフローです。通常画像/動画、COLMAP 4.1以降のネイティブ球面SfMを含むアプリ内COLMAPルート、RealityScanからLichtFeldへの変換にも対応しています。
+主な用途は、Insta360 / Osmo 360などのERP/エクイレクタングラー素材を整理・マスクしてMetashapeでSfMし、その結果をPostshot、Brush、LichtFeld Studio、COLMAP形式、RealityScan再アライン向けデータへ変換するワークフローです。通常画像/動画、ネイティブ球面SfM（COLMAP 4.1以降、4.2推奨）を含むアプリ内COLMAPルート、RealityScanからLichtFeldへの変換にも対応しています。
 
 ## ダウンロード
 
@@ -32,7 +32,7 @@ MetashapeでSfMした結果は、`transforms_postshot.json` / `pointcloud_postsh
 
 ### 2. アプリ内でSfMする
 
-Metashapeを使わない場合は、Step 4でCOLMAPルートを直接実行できます。通常のCOLMAPルートは360°画像をCubemap Rigへ展開し、通常画像は通常カメラとして扱うため、混在ソースを使いたい場合に向いています。COLMAP 4.1以降の球面ルートは、同一解像度のエクイレクタングラー360°画像をネイティブ `EQUIRECTANGULAR` カメラのまま扱います。
+Metashapeを使わない場合は、Step 4でCOLMAPルートを直接実行できます。通常のCOLMAPルートは360°画像をCubemap Rigへ展開し、通常画像は通常カメラとして扱うため、混在ソースを使いたい場合に向いています。COLMAP球面ルートは4.1以降が必要で、同一解像度のエクイレクタングラー360°画像をネイティブ `EQUIRECTANGULAR` カメラのまま扱います。
 
 ### 3. RealityScanからLichtFeldへ
 
@@ -51,7 +51,7 @@ RealityScanで再アラインしたCSV/PLYを、LichtFeldでDatasetとして開�
 - SAM3.1では、既存マスクに対して「三脚を追加する」「看板やロゴの誤検出を外す」といった加算/減算の補正ができます。手作業で塗り直す量を減らせます。
 - YOLO26-semの初期ターゲットは `person` と `sky` です。車両、植生、その他のCityscapesクラスは、素材に必要な場合だけ追加します。
 - 360°画像だけでなく、通常動画からのフレーム抽出や通常画像の連番画像にも使えます。人物・車両・空・白飛びなどを、SfMに渡す前のマスク前処理としてまとめて作成できます。
-- Step 4では、外部SfM結果を使うか、COLMAP Cubemap RigまたはCOLMAP 4.1以降の球面SfMをこのアプリから実行するかを選びます。
+- Step 4では、外部SfM結果を使うか、COLMAP Cubemap RigまたはCOLMAP球面SfMをこのアプリから実行するかを選びます。
 - Step 5では、Metashape / COLMAP球面 / RealityScan / COLMAPの結果から、NeRF系JSON/PLY、COLMAP形式データセット、LichtFeld向けRealityScan変換、AprilTagスケール補正などを選んで実行できます。
 - Step 5の `マスク出力` は、既定ではStep 3で作ったSfM用マスクを学習にも使います。学習時だけ違うマスクにしたい場合は、Step 3のSfM入力画像から学習用マスクを作り直し、Cubemap出力ではマスクもCubemapへ分割し、3DGUT/equirect出力では対応するデータセットマスクとして書き出します。
 - シーンプレビューで、SfM結果やデータセットの点群、カメラ位置、選択カメラの画像、対応マスクを同じ画面で確認できます。Step 4のビューワーカードから開けます。
@@ -129,7 +129,7 @@ checkpointを手動で `models/sam3.1/sam3.1_multiplex.pt` に置くこともで
   -> Step 3: マスク生成
   -> Step 4: SfM
       -> 既存のMetashape / RealityScan / COLMAP / COLMAP球面結果を使う
-      -> COLMAP Cubemap RigまたはCOLMAP 4.1以降の球面SfMをこのアプリから実行する
+      -> COLMAP Cubemap RigまたはCOLMAP球面SfMをこのアプリから実行する
       -> Metashape結果からRealityScan再アライン用データを作る
   -> Step 5: データセット
       -> 学習アプリへ渡すJSON/PLYまたはCOLMAP形式データセットを作る
@@ -150,7 +150,7 @@ checkpointを手動で `models/sam3.1/sam3.1_multiplex.pt` に置くこともで
 
 ## 関連ツール
 
-- [COLMAP](https://github.com/colmap/colmap): COLMAP Cubemap Rigルート、COLMAP 4.1以降のネイティブ `EQUIRECTANGULAR` 球面SfMルート、COLMAP形式データセットで使うSfM/MVSツールです。
+- [COLMAP](https://github.com/colmap/colmap): COLMAP Cubemap Rigルート、ネイティブ `EQUIRECTANGULAR` 球面SfMルート（4.1以降）、COLMAP形式データセットで使うSfM/MVSツールです。
 - [LichtFeld Studio](https://lichtfeld.io/): LichtFeld向けデータセットプリセットとStep 6のCLI起動に対応する3DGS学習アプリです。
 - [Postshot](https://www.jawset.com/): Postshot向けデータセットプリセットとStep 6のCLI起動に対応する3DGS学習アプリです。
 - [Brush](https://github.com/ArthurBrussee/brush): Cubemap系出力を読み込める、オープンソースのGaussian Splattingトレーナーです。
@@ -226,15 +226,15 @@ Metashapeでベースの360°画像を安定してSfMし、その結果をRealit
 
 1. Step 1からStep 3まではMetashapeルートと同じです。
 2. Step 4で `COLMAPでSfMを実行` を選びます。360°画像はCubemap Rigへ展開し、通常画像は通常カメラとして扱います。
-3. [COLMAP](https://github.com/colmap/colmap)またはGLOMAPの実行ファイル、Matcher、Mapperを確認して実行します。
+3. [COLMAP](https://github.com/colmap/colmap)のランチャーまたはGLOMAPの実行ファイル、Matcher、Mapperを確認して実行します。公式Windows版COLMAPでは最上位の `COLMAP.bat` を選びます。
 4. 完了後は `output/colmap_rig/` をCOLMAPデータセットとして、COLMAP対応の3DGSアプリに渡します。追加変換が不要な場合はStep 5をスキップして学習へ進めます。
 
-## COLMAP 4.1球面SfMルート
+## COLMAP球面SfMルート
 
 1. Step 1からStep 3まではMetashapeルートと同じです。COLMAP球面SfMでは、同一解像度のエクイレクタングラー360°画像だけを入力にするのが安全です。
-2. Step 4で `COLMAP 4.1球面SfMを実行` を選び、公式COLMAP 4.1以降の `colmap.exe` を指定します。このルートはCOLMAPのネイティブ `EQUIRECTANGULAR` カメラモデルを使うため、fork版COLMAPは不要です。
+2. Step 4で `COLMAP球面SfMを実行` を選び、公式COLMAP 4.1以降（4.2推奨）のランチャーを指定します。公式Windows配布版では最上位の `COLMAP.bat` を選びます。同じ配布物の `bin/colmap.exe` を選んだ場合も、アプリが隣接するバッチランチャーへ自動で切り替えるため、同梱ライブラリの検索パスを維持できます。
 3. RTX 50系GPUでは、古いCUDAビルドがGPU SIFTで停止することがあります。その場合は、GPUに対応したCUDAアーキテクチャでビルドされたCOLMAPを指定してください。
-4. `Matcher: Sequential`, `SfM品質: 標準` から始めます。
+4. `Matcher: Sequential`, `SfM品質: 標準` から始めます。本処理の前に、選択した特徴抽出・Matcher・Mapperの全オプションを検査し、画像1枚でGPU SIFTを実行します。
 5. Step 5で `COLMAP球面 → NeRFデータセット(JSON/PLY)` を選び、PINHOLEのCubemapデータにするか、LichtFeld向けのERP 360°データにするかを選びます。
 6. 完了後は、`output/colmap_equirect_3dgut/` または `output/colmap_equirect_cubemap/` を下流アプリへ渡します。COLMAP球面SfMの作業ファイルは `output/colmap_equirect/` にまとまります。
 

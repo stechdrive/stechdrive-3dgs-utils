@@ -23,7 +23,7 @@ Start by deciding whether camera poses already exist.
 | RealityScan realignment is already done | In Step 4, choose `Use Existing SfM Result`. In Step 5, choose `RealityScan -> COLMAP Dataset` |
 | You already have a COLMAP images/masks/sparse dataset | In Step 4, choose `Use Existing SfM Result`. For COLMAP-compatible training apps, continue directly to training; for Nerfstudio JSON/PLY, use `COLMAP RIG -> NeRF Dataset (JSON/PLY)` |
 | You want this app to run COLMAP | In Step 4, choose `Run COLMAP SfM` |
-| You want this app to run spherical SfM on same-resolution ERP 360° images | In Step 4, choose `Run COLMAP 4.1 Spherical SfM` |
+| You want this app to run spherical SfM on same-resolution ERP 360° images | In Step 4, choose `Run COLMAP Spherical SfM` |
 | You want to realign a Metashape result in RealityScan | In Step 4, choose `Metashape -> RealityScan Data` |
 | You want to inspect an existing result | In Step 4, choose `Inspect SfM Result` |
 
@@ -48,11 +48,11 @@ For video-like input, start with `Sequential` matching. For a smaller unordered 
 
 Normal images use automatic camera estimation in the GUI. If you need explicit calibrated intrinsics, prepare them as external metadata before import rather than entering per-image camera parameters in this step.
 
-### Run COLMAP 4.1 Spherical SfM
+### Run COLMAP Spherical SfM
 
 Choose this when you want to run SfM on equirectangular 360° images as spherical cameras without cubemap projection first. This route uses official [COLMAP](https://github.com/colmap/colmap) 4.1 or newer with the native `EQUIRECTANGULAR` camera model. Treat it as a route for same-resolution ERP 360° images only. Use the cubemap COLMAP route or Metashape when you need mixed normal images or multiple ERP resolutions.
 
-Select a COLMAP 4.1+ `colmap.exe`. On RTX 50-series GPUs, older CUDA builds can fail during GPU SIFT; in that case, select a COLMAP build made with a CUDA architecture that supports the GPU.
+Select an official COLMAP 4.1+ launcher; COLMAP 4.2 or newer is recommended. With the official Windows package, select its top-level `COLMAP.bat`. Selecting the package's `bin/colmap.exe` also makes the app use that adjacent batch launcher automatically, preserving the package library paths. Before the full run, the app verifies every feature, matcher, and mapper option selected in the GUI and runs GPU SIFT on one image. On RTX 50-series GPUs, older CUDA builds can fail during GPU SIFT; in that case, select a COLMAP build made with a CUDA architecture that supports the GPU.
 
 The SfM working folder is `output/colmap_equirect/`. Create JSON/PLY or cubemap datasets from that result in Step 5 with `COLMAP Spherical -> NeRF Dataset (JSON/PLY)`.
 

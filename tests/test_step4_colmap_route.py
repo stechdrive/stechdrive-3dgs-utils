@@ -462,6 +462,7 @@ def test_colmap_export_can_queue_colmap_global_mapper(tmp_path: Path) -> None:
 
     assert commands[-1][1][0] == str(fake_colmap)
     assert commands[-1][1][1] == "global_mapper"
+    assert commands[-1][1][commands[-1][1].index("--GlobalMapper.multiple_models") + 1] == "0"
 
 
 def test_colmap_user_preferences_restore_executable_and_pipeline_choices(

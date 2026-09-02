@@ -8,7 +8,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+from core.colmap_cli import build_colmap_command
 from core.path_safety import safe_clear_path
+from core.spheresfm_cli_contract import required_spheresfm_options
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".webp", ".bmp"}
 
@@ -29,37 +31,97 @@ def _parse_colmap_version(output: str) -> tuple[int, int, int] | None:
     return major, minor, patch
 
 
-def validate_spheresfm_colmap(colmap: str) -> None:
-    candidates = [
-        [colmap, "version"],
-        [colmap, "-h"],
-    ]
+def _run_colmap_capture(colmap: str, *arguments: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        build_colmap_command(colmap, *arguments),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=20,
+        check=False,
+    )
+
+
+def _detect_colmap_version(colmap: str) -> tuple[int, int, int]:
     last_error = ""
-    for cmd in candidates:
+    for arguments in (("version",), ("-h",)):
         try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                timeout=20,
-                check=False,
-            )
+            result = _run_colmap_capture(colmap, *arguments)
         except (OSError, subprocess.TimeoutExpired) as exc:
             last_error = str(exc)
             continue
         output = f"{result.stdout}\n{result.stderr}"
         version = _parse_colmap_version(output)
         if result.returncode == 0 and version is not None and version >= (4, 1, 0):
-            print("COLMAP 4.1+ spherical SfM executable verified.", flush=True)
-            return
+            return version
         last_error = output.strip()[-1200:]
     raise RuntimeError(
-        "The selected executable must be COLMAP 4.1.0 or newer with native EQUIRECTANGULAR camera support. "
-        "Run `colmap version` and select a COLMAP 4.1+ executable."
+        "The selected launcher must provide COLMAP 4.1.0 or newer with native EQUIRECTANGULAR camera support. "
+        "Run the selected COLMAP launcher with `version` and choose a supported COLMAP package."
         + (f"\nLast output:\n{last_error}" if last_error else "")
     )
+
+
+def _validate_spheresfm_cli_options(
+    colmap: str,
+    *,
+    matcher: str,
+    quality_preset: str,
+    use_masks: bool,
+) -> None:
+    required_by_command = required_spheresfm_options(
+        matcher=matcher,
+        quality_preset=quality_preset,
+        use_masks=use_masks,
+    )
+    failures: list[str] = []
+    for subcommand, required_options in required_by_command.items():
+        try:
+            result = _run_colmap_capture(colmap, subcommand, "-h")
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            failures.append(f"{subcommand}: help could not run ({exc})")
+            continue
+        output = f"{result.stdout}\n{result.stderr}"
+        if result.returncode != 0:
+            detail = output.strip()[-400:] or f"exit code {result.returncode}"
+            failures.append(f"{subcommand}: help failed ({detail})")
+            continue
+        missing = [option for option in required_options if option not in output]
+        if missing:
+            failures.append(f"{subcommand}: missing {', '.join(missing)}")
+
+    if failures:
+        details = "\n".join(f"- {failure}" for failure in failures)
+        raise RuntimeError(
+            "The selected COLMAP package does not provide the command-line options required by "
+            f"the current spherical SfM settings:\n{details}"
+        )
+
+
+def validate_spheresfm_colmap(
+    colmap: str,
+    *,
+    matcher: str = "sequential",
+    quality_preset: str = "standard",
+    use_masks: bool = False,
+    check_capabilities: bool = True,
+) -> tuple[int, int, int]:
+    quality_value = str(quality_preset).strip().lower()
+    version = _detect_colmap_version(colmap)
+    if check_capabilities:
+        _validate_spheresfm_cli_options(
+            colmap,
+            matcher=matcher,
+            quality_preset=quality_value,
+            use_masks=use_masks,
+        )
+    version_text = ".".join(str(part) for part in version)
+    print(f"COLMAP {version_text} spherical SfM launcher verified.", flush=True)
+    if version < (4, 2, 0):
+        suffix = " for spherical guided matching" if quality_value in {"quality", "robust"} else ""
+        print(f"WARNING: COLMAP 4.2 or newer is recommended{suffix}.", flush=True)
+    return version
 
 
 def source_mask_candidates(source_masks_dir: Path, rel_image: Path) -> list[Path]:

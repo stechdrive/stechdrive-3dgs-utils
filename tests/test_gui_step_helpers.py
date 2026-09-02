@@ -201,7 +201,30 @@ def test_spheresfm_builder_uses_spherical_camera_and_mask_path(tmp_path: Path) -
     assert "--Mapper.sphere_camera" not in commands[3][1]
     assert commands[3][1][commands[3][1].index("--Mapper.multiple_models") + 1] == "0"
     assert commands[3][1][commands[3][1].index("--Mapper.ba_global_max_num_iterations") + 1] == "75"
+    assert "--Mapper.ba_global_images_ratio" not in commands[3][1]
     assert sparse.is_dir()
+
+
+def test_spheresfm_standard_preset_uses_colmap_frames_ratio_option(tmp_path: Path) -> None:
+    images = tmp_path / "images"
+    images.mkdir()
+    commands = build_spheresfm_commands(
+        SphereSfmCommand(
+            colmap="colmap.exe",
+            images_dir=images,
+            prepared_masks_dir=tmp_path / "masks_colmap",
+            database=tmp_path / "project" / "database.db",
+            sparse=tmp_path / "project" / "sparse",
+            camera_params="64,32",
+            use_masks=False,
+            matcher="sequential",
+            quality_preset="standard",
+        )
+    )
+
+    mapper_cmd = commands[-1][1]
+    assert mapper_cmd[mapper_cmd.index("--Mapper.ba_global_frames_ratio") + 1] == "1.2"
+    assert "--Mapper.ba_global_images_ratio" not in mapper_cmd
 
 
 def test_prepare_spheresfm_masks_converts_to_colmap_extension_names(tmp_path: Path) -> None:

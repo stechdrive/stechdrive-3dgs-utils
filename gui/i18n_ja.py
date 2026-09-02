@@ -466,7 +466,7 @@ STRINGS: dict[str, str] = {
     "SFM_SELECT_ROUTE": "方式を選択",
     "SFM_BACK_TO_ROUTES": "← SfM方式一覧",
     "SFM_RUN_COLMAP": "COLMAP SfMを実行",
-    "SFM_RUN_SPHERESFM": "COLMAP 4.1球面SfMを実行",
+    "SFM_RUN_SPHERESFM": "COLMAP球面SfMを実行",
     "SFM_RUN_REALITYSCAN": "RealityScan用データを作成",
     "SFM_OPEN_VIEWER": "SfM結果を確認",
     "SFM_ROUTE_EXTERNAL_TITLE": "既存のSfM結果を使う",
@@ -478,16 +478,16 @@ STRINGS: dict[str, str] = {
     "SFM_ROUTE_COLMAP_TITLE": "COLMAPでSfMを実行",
     "SFM_ROUTE_COLMAP_BODY": "360°画像はCubemap Rigへ展開し、通常画像は通常カメラとして扱って、COLMAPでカメラポーズと疎点群を作成します。",
     "SFM_ROUTE_COLMAP_FOOTER": "出力: output/colmap_rig/",
-    "SFM_ROUTE_SPHERESFM_TITLE": "COLMAP 4.1球面SfMを実行",
-    "SFM_ROUTE_SPHERESFM_BODY": "同一解像度のエクイレクタングラー形式360°画像を、COLMAP 4.1のEQUIRECTANGULARカメラで処理し、カメラポーズと疎点群を作成します。",
+    "SFM_ROUTE_SPHERESFM_TITLE": "COLMAP球面SfMを実行",
+    "SFM_ROUTE_SPHERESFM_BODY": "同一解像度のエクイレクタングラー形式360°画像を、COLMAPのEQUIRECTANGULARカメラで処理し、カメラポーズと疎点群を作成します。",
     "SFM_ROUTE_SPHERESFM_FOOTER": "出力: output/colmap_equirect/",
     "SFM_ROUTE_VIEWER_TITLE": "SfM結果を確認",
     "SFM_ROUTE_VIEWER_BODY": "作成済みのカメラポーズ、疎点群、画像対応を読み取り専用ビューで確認します。",
     "SFM_ROUTE_VIEWER_FOOTER": "確認: sparse / transforms / pointcloud",
     "SFM_COLMAP_DETAIL_TITLE": "COLMAPでSfMを実行",
     "SFM_COLMAP_DETAIL_DESC": "360°画像のCubemap Rigと通常画像カメラを自動で準備し、COLMAPまたはGLOMAPでカメラポーズと疎点群を推定します。学習用データセット作成は次の工程で行います。",
-    "SFM_SPHERESFM_DETAIL_TITLE": "COLMAP 4.1球面SfMを実行",
-    "SFM_SPHERESFM_DETAIL_DESC": "同一解像度の360°画像を公式COLMAP 4.1のEQUIRECTANGULARカメラで処理し、カメラポーズと疎点群を含むsparseモデルを作成します。作成済みsparseからのCubemap/GUT変換は次のデータセット工程で行います。",
+    "SFM_SPHERESFM_DETAIL_TITLE": "COLMAP球面SfMを実行",
+    "SFM_SPHERESFM_DETAIL_DESC": "同一解像度の360°画像を公式COLMAPのEQUIRECTANGULARカメラで処理し、カメラポーズと疎点群を含むsparseモデルを作成します。作成済みsparseからのCubemap/GUT変換は次のデータセット工程で行います。",
     "SFM_REALITYSCAN_DETAIL_TITLE": "Metashape → RealityScan用データ作成",
     "SFM_REALITYSCAN_DETAIL_DESC": "MetashapeのSfM結果からRealityScanに渡すCubemap画像とXMPを作成します。Metashape XMLにある画像はimages/_geometryへ、XMLにない登録済み画像はextra_images/_geometryへ分けて出力します。マスクは各フォルダの_maskへ出力します。",
     # Step 5
@@ -588,9 +588,9 @@ STRINGS: dict[str, str] = {
     "METHOD_SPHERESFM": "COLMAP球面",
     "COLMAP_PIPELINE_SECTION": "COLMAP実行設定",
     "COLMAP_REPOSITORY_LINK": "COLMAP GitHub",
-    "COLMAP_EXECUTABLE": "COLMAP実行ファイル",
+    "COLMAP_EXECUTABLE": "COLMAPランチャー",
     "GLOMAP_EXECUTABLE": "GLOMAP実行ファイル",
-    "SPHERESFM_EXECUTABLE": "COLMAP 4.1実行ファイル",
+    "SPHERESFM_EXECUTABLE": "COLMAPランチャー",
     "SPHERESFM_REPOSITORY_LINK": "COLMAP GitHub",
     "SPHERESFM_USE_MASKS": "masks/ を使用",
     "SPHERESFM_QUALITY_COMPACT": "SfM品質:",
@@ -603,19 +603,19 @@ STRINGS: dict[str, str] = {
     "SPHERESFM_RESULT_NOT_FOUND": "COLMAP球面のsparseモデルが見つかりません: {path}",
     "SPHERESFM_OPEN_GUI_FAILED": "COLMAP GUIを起動できませんでした。",
     "SPHERESFM_OPEN_GUI_FAILED_DETAIL": (
-        "COLMAP GUIを起動できませんでした。\n\n実行ファイル: {exe}\nSfM結果: {model}\n\n詳細:\n{detail}"
+        "COLMAP GUIを起動できませんでした。\n\nランチャー: {exe}\nSfM結果: {model}\n\n詳細:\n{detail}"
     ),
     "SPHERESFM_OPEN_GUI_UNAVAILABLE": (
-        "選択中のCOLMAP実行ファイルではCOLMAP GUIを起動できませんでした。\n\n"
-        "このボタンで結果を見るには、Qt GUI付きでビルドされた colmap.exe が必要です。"
+        "選択中のCOLMAPランチャーではCOLMAP GUIを起動できませんでした。\n\n"
+        "このボタンで結果を見るには、Qt GUI付きのCOLMAPパッケージが必要です。"
         "SfM結果自体は保存済みです。\n\n"
-        "実行ファイル: {exe}\n"
+        "ランチャー: {exe}\n"
         "SfM結果: {model}\n\n"
         "COLMAP出力:\n{detail}"
     ),
-    "SPHERESFM_EXEC_NOT_FOUND": "COLMAP 4.1以降の実行ファイルが見つかりません。インストール先の colmap.exe を指定してください: {path}",
+    "SPHERESFM_EXEC_NOT_FOUND": "COLMAP 4.1以降のランチャーが見つかりません。COLMAP.bat または colmap.exe を指定してください: {path}",
     "SPHERESFM_MASKS_NOT_FOUND": "masks/ を使用する設定ですが、マスクフォルダが見つかりません: {path}",
-    "SPHERESFM_PREFLIGHT_FAILED": "COLMAP 4.1球面SfMは、同一解像度のエクイレクタングラー360°画像だけを入力にできます。\n{details}",
+    "SPHERESFM_PREFLIGHT_FAILED": "COLMAP球面SfMは、同一解像度のエクイレクタングラー360°画像だけを入力にできます。\n{details}",
     "COLMAP_MIXED_PREFLIGHT_FAILED": "COLMAP SfMの入力を確認できません。\n{details}",
     "SPHERESFM_CONVERT_ONLY_NO_SPARSE": "COLMAP球面のsparseモデルが見つかりません: {path}\n左サブ工程でSfMをONにして、先にsparseモデルを作成してください。",
     "SPHERESFM_POSE_REQUIRED": "Spatial matcherにはCOLMAP database内の位置事前情報が必要です。",
@@ -623,7 +623,7 @@ STRINGS: dict[str, str] = {
     "SPHERESFM_RTX50_CUDA_ERROR_TITLE": "COLMAP CUDA互換性エラー",
     "SPHERESFM_RTX50_CUDA_ERROR_BODY": (
         "COLMAPのGPU処理が、RTX 50系でよく出るCUDAアーキテクチャ不一致エラーで停止しました。\n\n"
-        "選択した colmap.exe がRTX 50系 (sm_120) 向けにビルドされていない可能性があります。"
+        "選択したCOLMAPパッケージがRTX 50系 (sm_120) 向けにビルドされていない可能性があります。"
         "CUDA 13.x以降と CMAKE_CUDA_ARCHITECTURES=120 でビルドされたCOLMAPを指定してください。\n\n"
         "ログ: {log_path}"
     ),
@@ -661,7 +661,7 @@ STRINGS: dict[str, str] = {
     "PHASE_TRAINING_POSTSHOT": "Postshot",
     "PHASE_TRAINING_BRUSH": "Brushトレーニング",
     "PHASE_TRAINING_GSPLAT": "gsplatトレーニング",
-    "COLMAP_EXEC_NOT_FOUND": "COLMAP実行ファイルが見つかりません。インストール先の colmap.exe を指定してください: {path}",
+    "COLMAP_EXEC_NOT_FOUND": "COLMAPランチャーが見つかりません。COLMAP.bat または colmap.exe を指定してください: {path}",
     "GLOMAP_EXEC_NOT_FOUND": "GLOMAP実行ファイルが見つかりません。GLOMAPを使う場合は glomap.exe を指定してください: {path}",
     "TRAINING_EXEC_NOT_FOUND": "実行ファイルが見つかりません。インストール先の実行ファイルを指定してください: {path}",
     "TRAINING_REQUIRES_DATASET_OUTPUT": "学習に使うデータセットが見つかりません。先にデータセット工程で作成するか、入力データを指定してください。",
@@ -1181,7 +1181,7 @@ STRINGS: dict[str, str] = {
     "STEP4_PIPELINE_DETAIL_COLMAP_OFF": "今回はCOLMAP SfMを実行しません。必要なら丸ボタンをクリックしてください。",
     "STEP4_PIPELINE_DETAIL_COLMAP_NEEDS_RIG": "COLMAP SfMにはCubemap変換の出力が必要です。Cubemap変換も実行対象にするか、既存のCOLMAP Rig出力を用意してください。",
     "STEP4_PIPELINE_DETAIL_COLMAP_NEEDS_POSES": "COLMAP SfMを実行するか、既存のsparseモデルを用意してください。",
-    "STEP4_PIPELINE_DETAIL_SPHERESFM_RUNS": "COLMAP 4.1球面SfMをこの実行で行います。",
+    "STEP4_PIPELINE_DETAIL_SPHERESFM_RUNS": "COLMAP球面SfMをこの実行で行います。",
     "STEP4_PIPELINE_DETAIL_SPHERESFM_READY": "既存のCOLMAP球面sparseモデルを使えます。",
     "STEP4_PIPELINE_DETAIL_SPHERESFM_OFF": "今回はCOLMAP球面SfMを実行しません。必要なら丸ボタンをクリックしてください。",
     "STEP4_PIPELINE_DETAIL_SPHERESFM_NEEDS_SPARSE": "変換のみの場合は既存のsparseモデルが必要です。",
@@ -1295,7 +1295,7 @@ TIPS: dict[str, str] = {
     "SFM_SELECT_ROUTE": "この画面のカードからSfMルートを選びます。COLMAPとCOLMAP球面SfMはこの工程内で設定して実行します",
     "SFM_BACK_TO_ROUTES": "SfM方式を選ぶカード一覧に戻ります",
     "SFM_RUN_COLMAP": "Cubemap視点画像の準備とCOLMAP/GLOMAPのSfMを実行します",
-    "SFM_RUN_SPHERESFM": "公式COLMAP 4.1のEQUIRECTANGULARカメラで360画像からsparseモデルを作成します",
+    "SFM_RUN_SPHERESFM": "公式COLMAPのEQUIRECTANGULARカメラで360画像からsparseモデルを作成します",
     "SFM_RUN_REALITYSCAN": "MetashapeのカメラXMLからRealityScan再アライン用のCubemap画像とXMPを作成します",
     "SFM_OPEN_VIEWER": "シーン内のSfM結果やデータセット出力を読み取り専用ビューで確認します",
     "SFM_ROUTE_EXTERNAL": "Metashape、RealityScan、COLMAP、COLMAP球面SfMなどで作成済みのカメラ結果を使うルートです。Step 4で実行する処理はありません",
@@ -1548,9 +1548,9 @@ TIPS: dict[str, str] = {
     "POSTSHOT_EXPORT_SPLAT": "学習後にPLYまたはSPZを書き出すパスです。ファイル名だけならTraining Output内に保存します",
     "COLMAP_REPOSITORY_LINK": "COLMAPの公式GitHubリポジトリを開きます。COLMAP本体やビルド情報を確認できます",
     "SPHERESFM_REPOSITORY_LINK": "公式COLMAPのGitHubリポジトリを開きます。COLMAP本体は、このアプリには同梱されていません",
-    "COLMAP_EXECUTABLE": "この環境で使う colmap.exe のパス。空欄ならPATH上の colmap.exe を探します",
+    "COLMAP_EXECUTABLE": "この環境で使うCOLMAPランチャーです。公式Windows配布版ではCOLMAP.batを選びます。bin内のcolmap.exeを選んだ場合も、同梱のCOLMAP.batを自動使用します",
     "GLOMAP_EXECUTABLE": "GLOMAP mapperを選ぶ場合に使う glomap.exe のパス。COLMAPのGlobal Mapperを使う場合は不要です",
-    "SPHERESFM_EXECUTABLE": "公式COLMAP 4.1以降の colmap.exe を指定します。このルートではネイティブEQUIRECTANGULARカメラモデルで球面画像SfMを行います",
+    "SPHERESFM_EXECUTABLE": "公式COLMAP 4.1以降（4.2推奨）のランチャーを指定します。Windows配布版ではCOLMAP.batを選び、ネイティブEQUIRECTANGULARカメラで球面画像SfMを行います",
     "SPHERESFM_USE_MASKS": "ONにするとStep 3のマスクをSfM時の除外範囲として使います。必要な形式への変換はアプリが自動で行います",
     "SPHERESFM_MATCHER": (
         "Sequentialは高速で動画の連番フレーム向けです。\n"
@@ -1558,7 +1558,7 @@ TIPS: dict[str, str] = {
         "SpatialはCOLMAP database内にある位置事前情報で近傍画像を照合します"
     ),
     "SPHERESFM_QUALITY_PRESET": "軽量は処理時間を短くします。標準は処理時間とSfM結果の品質のバランスを取ります。クオリティは時間をかけて、カメラ位置と点群をより丁寧に推定します",
-    "SPHERESFM_POSE_FILE": "旧プロジェクト設定との互換用です。公式COLMAP 4.1球面SfMでは、この画面から位置ファイルを取り込みません",
+    "SPHERESFM_POSE_FILE": "旧プロジェクト設定との互換用です。公式COLMAP球面SfMでは、この画面から位置ファイルを取り込みません",
     "SPHERESFM_OPEN_GUI": "COLMAP球面SfMの結果をCOLMAP GUIで開き、カメラ位置と点群を確認します。表示にはGUI対応のCOLMAPビルドが必要です",
     "SCENE_PREVIEW_OPEN": "SfM結果またはデータセット出力を読み取り専用で開き、カメラ・点群・画像対応を確認します。",
     "SCENE_PREVIEW_SELECT_SCENE": "読み取り専用プレビューで確認するシーンフォルダを選びます",

@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 
 from core.cancellation import CancellationToken, raise_if_cancelled, terminate_process
+from core.colmap_cli import build_colmap_command
 from core.path_safety import safe_clear_path
 from core.spheresfm_project import iter_images, validate_spheresfm_colmap  # noqa: F401
 
@@ -59,7 +60,7 @@ def run_colmap_command(cmd: list[str], label: str, *, cancel_event: Cancellation
 
 
 def build_feature_command(colmap: str, database: Path, images_dir: Path, camera_params: str) -> list[str]:
-    return [
+    return build_colmap_command(
         colmap,
         "feature_extractor",
         "--database_path",
@@ -78,7 +79,7 @@ def build_feature_command(colmap: str, database: Path, images_dir: Path, camera_
         PREFLIGHT_MAX_IMAGE_SIZE,
         "--SiftExtraction.max_num_features",
         PREFLIGHT_MAX_NUM_FEATURES,
-    ]
+    )
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -15,6 +15,7 @@ from core.job_payload_validation import (
     require_str,
     require_views,
 )
+from core.spheresfm_cli_contract import SPHERESFM_MATCHERS, SPHERESFM_QUALITY_PRESETS
 
 WORKFLOW_JOB_SCHEMA_VERSION = 1
 
@@ -168,6 +169,9 @@ def spheresfm_preflight_job(
     images_dir: str | Path,
     work_dir: str | Path,
     camera_params: str,
+    matcher: str,
+    quality_preset: str,
+    use_masks: bool,
 ) -> dict[str, Any]:
     return {
         "schema_version": WORKFLOW_JOB_SCHEMA_VERSION,
@@ -176,6 +180,9 @@ def spheresfm_preflight_job(
         "images_dir": str(images_dir),
         "work_dir": str(work_dir),
         "camera_params": str(camera_params),
+        "matcher": str(matcher),
+        "quality_preset": str(quality_preset),
+        "use_masks": bool(use_masks),
     }
 
 
@@ -319,6 +326,13 @@ def _validate_transforms_to_colmap_job(payload: Mapping[str, Any]) -> None:
 def _validate_spheresfm_preflight_job(payload: Mapping[str, Any]) -> None:
     for key in ("colmap", "images_dir", "work_dir", "camera_params"):
         require_str(payload, key, label="workflow")
+    matcher = require_str(payload, "matcher", label="workflow")
+    if matcher not in SPHERESFM_MATCHERS:
+        raise ValueError(f"Unsupported workflow matcher: {matcher}")
+    quality_preset = require_str(payload, "quality_preset", label="workflow")
+    if quality_preset not in SPHERESFM_QUALITY_PRESETS:
+        raise ValueError(f"Unsupported workflow quality preset: {quality_preset}")
+    require_bool(payload, "use_masks", label="workflow")
 
 
 def _validate_spheresfm_prepare_job(payload: Mapping[str, Any]) -> None:

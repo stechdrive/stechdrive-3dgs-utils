@@ -141,6 +141,9 @@ def test_spheresfm_method_can_queue_3dgut_export_without_projection_views(tmp_pa
     prepare_job = _workflow_job(commands[1][1])
     transforms_job = _workflow_job(commands[6][1])
     assert preflight_job["colmap"] == str(fake_colmap)
+    assert preflight_job["matcher"] == "sequential"
+    assert preflight_job["quality_preset"] == "standard"
+    assert preflight_job["use_masks"] is True
     assert prepare_job["use_masks"] is True
     assert commands[3][1][commands[3][1].index("--ImageReader.camera_model") + 1] == "EQUIRECTANGULAR"
     assert commands[3][1][commands[3][1].index("--ImageReader.camera_params") + 1] == "64,32"
@@ -151,6 +154,8 @@ def test_spheresfm_method_can_queue_3dgut_export_without_projection_views(tmp_pa
     assert "--Mapper.sphere_camera" not in commands[5][1]
     assert commands[5][1][commands[5][1].index("--Mapper.multiple_models") + 1] == "0"
     assert commands[5][1][commands[5][1].index("--Mapper.ba_global_max_num_iterations") + 1] == "33"
+    assert commands[5][1][commands[5][1].index("--Mapper.ba_global_frames_ratio") + 1] == "1.2"
+    assert "--Mapper.ba_global_images_ratio" not in commands[5][1]
     assert transforms_job["sparse_dir"] == str(tmp_path / "output" / "colmap_equirect" / "sparse")
     assert transforms_job["output_dir"] == str(tmp_path / "output" / "colmap_equirect_3dgut")
     assert transforms_job["image_path_mode"] == "images-prefix"

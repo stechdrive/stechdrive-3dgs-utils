@@ -23,7 +23,7 @@ Step 5は、SfM結果を学習アプリで読み込めるデータセットへ�
 | RealityScanで再アライン済み | Step 4は `既存のSfM結果を使う`。Step 5で `RealityScan → COLMAPデータセット` を選ぶ |
 | COLMAPのimages/masks/sparseがすでにある | Step 4は `既存のSfM結果を使う`。COLMAP対応アプリならそのまま学習へ進み、Nerfstudio用JSON/PLYが必要なら `COLMAP RIG → NeRFデータセット(JSON/PLY)` を使う |
 | このアプリからCOLMAPでSfMしたい | Step 4で `COLMAPでSfMを実行` |
-| 同一解像度のERP 360°画像を球面カメラのままSfMしたい | Step 4で `COLMAP 4.1球面SfMを実行` |
+| 同一解像度のERP 360°画像を球面カメラのままSfMしたい | Step 4で `COLMAP球面SfMを実行` |
 | Metashape結果をRealityScanで再アラインしたい | Step 4で `Metashape → RealityScan用データ作成` |
 | 作成済み結果を確認したい | Step 4で `SfM結果を確認` |
 
@@ -48,11 +48,11 @@ Metashapeを使わず、このアプリから[COLMAP](https://github.com/colmap/
 
 通常画像のカメラはGUIでは自動推定を使います。明示的な校正済み内部パラメータが必要な場合は、このStepで手入力するのではなく、取り込み前の外部メタデータとして用意します。
 
-### COLMAP 4.1球面SfMを実行
+### COLMAP球面SfMを実行
 
 エクイレクタングラー360°画像を、Cubemapへ投影せず球面カメラとしてSfMしたい場合に選びます。このルートは公式[COLMAP](https://github.com/colmap/colmap) 4.1以降のネイティブ `EQUIRECTANGULAR` カメラモデルを使います。同一解像度のERP 360°画像だけを入力にするのが安全です。通常画像や複数解像度ERPを混ぜたい場合は、Cubemap化するCOLMAPルートまたはMetashapeを使ってください。
 
-COLMAP 4.1以降の `colmap.exe` を指定してください。RTX 50系GPUでは古いCUDAビルドがGPU SIFTで止まる場合があるため、その場合はGPUに対応したCUDAアーキテクチャでビルドされたCOLMAPを指定します。
+公式COLMAP 4.1以降（4.2推奨）のランチャーを指定してください。公式Windows配布版では最上位の `COLMAP.bat` を選びます。同じ配布物の `bin/colmap.exe` を選んだ場合も、アプリが隣接するバッチランチャーへ自動で切り替え、同梱ライブラリの検索パスを維持します。本処理の前に、GUIで選んだ特徴抽出・Matcher・Mapperの全オプションを検査し、画像1枚でGPU SIFTを実行します。RTX 50系GPUでは古いCUDAビルドがGPU SIFTで止まる場合があるため、その場合はGPUに対応したCUDAアーキテクチャでビルドされたCOLMAPを指定します。
 
 SfM作業フォルダは `output/colmap_equirect/` です。学習アプリへ渡すJSON/PLYやCubemapデータは、Step 5で `COLMAP球面 → NeRFデータセット(JSON/PLY)` を実行して作ります。
 

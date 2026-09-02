@@ -12,6 +12,7 @@ from pathlib import Path
 from PySide6.QtCore import QProcess
 from PySide6.QtWidgets import QMessageBox
 
+from core.colmap_cli import build_colmap_command, colmap_batch_qprocess_native_arguments
 from core.orientation_correction import (
     FINAL_ORIENTATION_LICHTFELD,
     FINAL_ORIENTATION_STAGE_DIRECT_FINALIZE,
@@ -61,7 +62,8 @@ class Step4RuntimeMixin:
         except ValueError as exc:
             QMessageBox.warning(self, i18n.t("SPHERESFM_OPEN_GUI"), str(exc))
             return
-        args = [
+        command = build_colmap_command(
+            colmap,
             "gui",
             "--database_path",
             str(self._spheresfm_database_path()),
@@ -69,10 +71,14 @@ class Step4RuntimeMixin:
             str(self._metashape_images_dir()),
             "--import_path",
             str(model),
-        ]
+        )
         process = self._create_spheresfm_gui_process()
-        process.setProgram(colmap)
-        process.setArguments(args)
+        process.setProgram(command[0])
+        native_arguments = colmap_batch_qprocess_native_arguments(command)
+        if native_arguments is None:
+            process.setArguments(command[1:])
+        else:
+            process.setNativeArguments(native_arguments)
         process.setProcessChannelMode(QProcess.MergedChannels)
         process.start()
         if not process.waitForStarted(3000):

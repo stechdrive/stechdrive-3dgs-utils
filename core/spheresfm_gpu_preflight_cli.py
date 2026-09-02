@@ -9,14 +9,18 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import core.spheresfm_gpu_preflight as preflight
+from core.colmap_cli import build_colmap_command
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Check whether COLMAP 4.1 spherical GPU SIFT can run on one image.")
-    parser.add_argument("--colmap", required=True, help="COLMAP 4.1+ executable")
+    parser = argparse.ArgumentParser(description="Check COLMAP spherical SfM CLI support and GPU SIFT on one image.")
+    parser.add_argument("--colmap", required=True, help="COLMAP 4.1+ executable or Windows COLMAP.bat launcher")
     parser.add_argument("--images-dir", required=True, type=Path)
     parser.add_argument("--work-dir", required=True, type=Path)
     parser.add_argument("--camera-params", required=True)
+    parser.add_argument("--matcher", choices=("sequential", "exhaustive", "spatial"), default="sequential")
+    parser.add_argument("--quality-preset", choices=("fast", "standard", "quality"), default="standard")
+    parser.add_argument("--use-masks", action="store_true")
     return parser
 
 
@@ -28,7 +32,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not images:
         raise FileNotFoundError(f"No supported images found: {args.images_dir}")
 
-    preflight.validate_spheresfm_colmap(args.colmap)
+    preflight.validate_spheresfm_colmap(
+        args.colmap,
+        matcher=args.matcher,
+        quality_preset=args.quality_preset,
+        use_masks=args.use_masks,
+    )
 
     preflight_images = preflight.reset_preflight_workspace(args.work_dir)
     source = images[0]
@@ -38,12 +47,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     database = args.work_dir / "database.db"
     preflight.run_colmap_command(
-        [
+        build_colmap_command(
             args.colmap,
             "database_creator",
             "--database_path",
             str(database),
-        ],
+        ),
         "COLMAP spherical preflight database_creator",
     )
     preflight.run_colmap_command(
