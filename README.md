@@ -238,6 +238,19 @@ Use this route when Metashape aligns the base 360° images well, but you want Re
 5. In Step 5, choose `COLMAP Spherical -> NeRF Dataset (JSON/PLY)`, then choose PINHOLE cubemap output or ERP 360° data for LichtFeld.
 6. After completion, pass `output/colmap_equirect_3dgut/` or `output/colmap_equirect_cubemap/` to downstream apps. COLMAP spherical SfM working files stay under `output/colmap_equirect/`.
 
+### COLMAP Compatibility Quick Reference
+
+COLMAP is an external application and is not installed by `setup_windows.bat`.
+
+| Check | Guidance |
+| --- | --- |
+| Spherical SfM version | COLMAP 4.1 is the supported minimum. COLMAP 4.2 or newer is recommended, especially for the `Quality` preset that uses spherical guided matching. |
+| Official Windows package | Select the top-level `COLMAP.bat`. Selecting that package's `bin/colmap.exe` is also safe because the app switches to the adjacent batch launcher automatically. |
+| PATH or custom build | Leaving the field blank searches for `COLMAP.bat`, then `colmap.exe` on Windows. A standalone `colmap.exe` remains supported when it has all required runtime libraries and CLI options. |
+| Before a full run | The app verifies the version and exact options needed by the selected preset, then tests GPU SIFT with one image. Passing this preflight confirms startup compatibility, not that every scene image will register. |
+
+Existing successful COLMAP 4.1 sparse models do not need to be rebuilt only because COLMAP 4.2 is available. See the [Step 4 / Step 5 guide](doc/cubemap_tools_gui.md#run-colmap-spherical-sfm) for migration and troubleshooting details.
+
 ## Mask Preprocessing for Normal Images
 
 For normal-camera video from DSLR, mirrorless, smartphone, or similar cameras, extract frames in Step 1. For existing image sequences, add a still-image folder to Step 1 `Input Sources`; the images are copied into the scene and registered for later steps. Step 3 detects the image type from Step 1 records, external image registration, or image headers. Normal images keep model-based masking and overexposure masking available while disabling stitch seam masking and 360° pole projection assist.
@@ -260,6 +273,7 @@ Use this when you want to exclude people, vehicles, blown-out regions, or simila
 - CUDA-capable GPU
 - CUDA Toolkit 12.8
 - FFmpeg / FFprobe (`setup_windows.bat` installs Gyan.FFmpeg through winget when missing)
+- External COLMAP installation only when running an in-app COLMAP route (4.1+ required for spherical SfM; 4.2+ recommended)
 
 Main Python packages resolved by `setup_windows.bat`:
 

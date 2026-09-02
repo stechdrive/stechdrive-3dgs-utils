@@ -238,6 +238,19 @@ Metashapeでベースの360°画像を安定してSfMし、その結果をRealit
 5. Step 5で `COLMAP球面 → NeRFデータセット(JSON/PLY)` を選び、PINHOLEのCubemapデータにするか、LichtFeld向けのERP 360°データにするかを選びます。
 6. 完了後は、`output/colmap_equirect_3dgut/` または `output/colmap_equirect_cubemap/` を下流アプリへ渡します。COLMAP球面SfMの作業ファイルは `output/colmap_equirect/` にまとまります。
 
+### COLMAP互換性の早見表
+
+COLMAPは外部アプリであり、`setup_windows.bat` ではインストールしません。
+
+| 確認項目 | 選び方 |
+| --- | --- |
+| 球面SfMのバージョン | COLMAP 4.1が対応下限です。球面Guided Matchingを使う `クオリティ` では特に、COLMAP 4.2以降を推奨します。 |
+| 公式Windows配布版 | 最上位の `COLMAP.bat` を選びます。同じ配布物の `bin/colmap.exe` を選んでも、アプリが隣接するバッチランチャーへ自動切り替えするため安全です。 |
+| PATH / カスタムビルド | 未指定なら、WindowsではPATH上の `COLMAP.bat`、次に `colmap.exe` を検索します。必要な実行時ライブラリとCLIオプションを持つ単体 `colmap.exe` も使えます。 |
+| 本処理の前 | バージョンと選択中プリセットに必要な全オプションを検査し、画像1枚でGPU SIFTを試します。事前検査の成功は起動互換性の確認であり、全画像の登録成功を保証するものではありません。 |
+
+既存のCOLMAP 4.1で成功済みのSparseモデルは、4.2が公開されたという理由だけで再作成する必要はありません。移行とトラブル対応は [Step 4 / Step 5ガイド](doc/cubemap_tools_gui.ja.md#colmap球面sfmを実行) を参照してください。
+
 ## 通常画像・通常動画のマスク前処理
 
 デジタル一眼・スマホなどで撮影した通常動画は、Step 1でフレーム抽出できます。すでにある連番画像はStep 1の `静止画フォルダを追加` でシーンへ登録します。画像タイプはStep 1の記録、外部画像登録、画像ヘッダー推定から自動判定されます。通常画像ではスティッチ境界と360°専用の極投影補助を使わず、モデルによるマスク生成や白飛びマスクを使えます。
@@ -260,6 +273,7 @@ Metashapeでベースの360°画像を安定してSfMし、その結果をRealit
 - CUDA対応GPU
 - CUDA Toolkit 12.8
 - FFmpeg / FFprobe (`setup_windows.bat` が未検出時にwinget経由で Gyan.FFmpeg を導入)
+- アプリ内COLMAPルートを使う場合のみ、別途COLMAPが必要（球面SfMは4.1以降必須、4.2以降推奨）
 
 `setup_windows.bat` で解決される主なPythonパッケージ:
 

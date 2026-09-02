@@ -8,7 +8,7 @@ Step 5 converts SfM results into datasets that training apps can read. Use it to
 
 | Tool | Use in this app |
 | --- | --- |
-| [COLMAP](https://github.com/colmap/colmap) | Step 4 COLMAP routes, native EQUIRECTANGULAR spherical SfM in COLMAP 4.1+, and COLMAP-format dataset outputs |
+| [COLMAP](https://github.com/colmap/colmap) | Step 4 COLMAP routes, native EQUIRECTANGULAR spherical SfM in COLMAP 4.1+ (4.2+ recommended), and COLMAP-format dataset outputs |
 | [LichtFeld Studio](https://lichtfeld.io/) | LichtFeld presets, GUT output, and RealityScan-to-COLMAP dataset use |
 | [Postshot](https://www.jawset.com/) | Postshot presets and Step 6 CLI launch |
 | [Brush](https://github.com/ArthurBrussee/brush) | Cubemap-style output for open-source Gaussian Splatting training |
@@ -52,7 +52,37 @@ Normal images use automatic camera estimation in the GUI. If you need explicit c
 
 Choose this when you want to run SfM on equirectangular 360° images as spherical cameras without cubemap projection first. This route uses official [COLMAP](https://github.com/colmap/colmap) 4.1 or newer with the native `EQUIRECTANGULAR` camera model. Treat it as a route for same-resolution ERP 360° images only. Use the cubemap COLMAP route or Metashape when you need mixed normal images or multiple ERP resolutions.
 
-Select an official COLMAP 4.1+ launcher; COLMAP 4.2 or newer is recommended. With the official Windows package, select its top-level `COLMAP.bat`. Selecting the package's `bin/colmap.exe` also makes the app use that adjacent batch launcher automatically, preserving the package library paths. Before the full run, the app verifies every feature, matcher, and mapper option selected in the GUI and runs GPU SIFT on one image. On RTX 50-series GPUs, older CUDA builds can fail during GPU SIFT; in that case, select a COLMAP build made with a CUDA architecture that supports the GPU.
+#### Select the Launcher and Version
+
+COLMAP is not bundled with this app and is not installed by `setup_windows.bat`. Install or extract COLMAP separately, then use one of these choices:
+
+| Installation | Selection in Step 4 |
+| --- | --- |
+| Official Windows ZIP | Select the package's top-level `COLMAP.bat`. This is the recommended choice because it establishes the package library paths. |
+| Official Windows `bin/colmap.exe` | You may select it; the app detects the adjacent top-level `COLMAP.bat` and uses that launcher automatically. |
+| Standalone or custom `colmap.exe` | Select it directly only when its runtime libraries are already available. The capability preflight still applies. |
+| COLMAP on `PATH` | Leave the field blank. On Windows, the app searches for `COLMAP.bat` first and then `colmap.exe`. |
+
+COLMAP 4.1 is the supported minimum because it introduced the native `EQUIRECTANGULAR` camera model used by this route. COLMAP 4.2 or newer is recommended, particularly with the `Quality` preset: that preset enables guided matching, and the [COLMAP 4.2 changelog](https://github.com/colmap/colmap/blob/4.2.0/CHANGELOG.rst) includes the corresponding spherical-camera fix. COLMAP 4.1 remains usable for existing projects and the `Fast` / `Standard` presets.
+
+#### What the Preflight Checks
+
+Before the full SfM run, the app performs these checks in order:
+
+1. Run the selected launcher and require COLMAP 4.1.0 or newer.
+2. Read the help for the selected feature extractor, matcher, and mapper, then confirm every CLI option required by the current GUI settings is available.
+3. Create an isolated temporary database and run GPU SIFT on one source image.
+
+A successful preflight confirms that the launcher, selected command-line contract, packaged libraries, and GPU SIFT startup work together. It does not guarantee that every image will register in the scene. The spherical mapper intentionally produces one reconstruction component so the downstream `sparse/0` contract stays stable; if the capture separates into disconnected groups, improve overlap or matching rather than expecting several output components.
+
+On RTX 50-series GPUs, older CUDA builds can fail during GPU SIFT. If that happens, select a COLMAP build made with a CUDA architecture that supports the GPU.
+
+#### Updating an Existing Project
+
+- An existing successful COLMAP 4.1 sparse model does not need to be rebuilt only because COLMAP 4.2 is available. Step 5 can continue to convert it.
+- Existing scene settings remain valid. Point the Step 4 field at the new `COLMAP.bat` when moving to the official 4.2 Windows package.
+- If an older app build stopped on the unsupported `--Mapper.ba_global_images_ratio` option, update this app and rerun Step 4. The current command contract uses the supported COLMAP option.
+- If launching `bin/colmap.exe` directly previously failed to find packaged DLLs, select the top-level `COLMAP.bat` or rerun with the current app, which redirects that executable selection to the package launcher.
 
 The SfM working folder is `output/colmap_equirect/`. Create JSON/PLY or cubemap datasets from that result in Step 5 with `COLMAP Spherical -> NeRF Dataset (JSON/PLY)`.
 
@@ -122,6 +152,8 @@ Turn on `Undistort to PINHOLE` only when RealityScan includes normal-camera imag
 Create a JSON/PLY dataset from the COLMAP spherical sparse model created in Step 4, or from another selected COLMAP sparse model that uses `EQUIRECTANGULAR` or legacy `SPHERE` cameras.
 
 Use same-resolution ERP 360° input for COLMAP spherical SfM. The output can be ERP 360° data for LichtFeld GUT or PINHOLE cubemap data for Postshot, Brush, or LichtFeld.
+
+New COLMAP models use the official `EQUIRECTANGULAR` camera. Existing legacy SphereSfM `SPHERE` sparse models remain importable through this spherical conversion route, so they do not need camera-name or numeric-ID edits before conversion.
 
 ### Scale Adjustment
 

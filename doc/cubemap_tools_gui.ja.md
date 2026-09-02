@@ -8,7 +8,7 @@ Step 5は、SfM結果を学習アプリで読み込めるデータセットへ�
 
 | ツール | このアプリでの用途 |
 | --- | --- |
-| [COLMAP](https://github.com/colmap/colmap) | Step 4のCOLMAPルート、COLMAP 4.1以降のネイティブEQUIRECTANGULAR球面SfM、COLMAP形式データセット出力 |
+| [COLMAP](https://github.com/colmap/colmap) | Step 4のCOLMAPルート、COLMAP 4.1以降（4.2以降推奨）のネイティブEQUIRECTANGULAR球面SfM、COLMAP形式データセット出力 |
 | [LichtFeld Studio](https://lichtfeld.io/) | LichtFeldプリセット、GUT出力、RealityScanからCOLMAPデータセットへの変換先 |
 | [Postshot](https://www.jawset.com/) | PostshotプリセットとStep 6のCLI起動 |
 | [Brush](https://github.com/ArthurBrussee/brush) | オープンソースのGaussian Splatting学習向けCubemap出力 |
@@ -52,7 +52,37 @@ Metashapeを使わず、このアプリから[COLMAP](https://github.com/colmap/
 
 エクイレクタングラー360°画像を、Cubemapへ投影せず球面カメラとしてSfMしたい場合に選びます。このルートは公式[COLMAP](https://github.com/colmap/colmap) 4.1以降のネイティブ `EQUIRECTANGULAR` カメラモデルを使います。同一解像度のERP 360°画像だけを入力にするのが安全です。通常画像や複数解像度ERPを混ぜたい場合は、Cubemap化するCOLMAPルートまたはMetashapeを使ってください。
 
-公式COLMAP 4.1以降（4.2推奨）のランチャーを指定してください。公式Windows配布版では最上位の `COLMAP.bat` を選びます。同じ配布物の `bin/colmap.exe` を選んだ場合も、アプリが隣接するバッチランチャーへ自動で切り替え、同梱ライブラリの検索パスを維持します。本処理の前に、GUIで選んだ特徴抽出・Matcher・Mapperの全オプションを検査し、画像1枚でGPU SIFTを実行します。RTX 50系GPUでは古いCUDAビルドがGPU SIFTで止まる場合があるため、その場合はGPUに対応したCUDAアーキテクチャでビルドされたCOLMAPを指定します。
+#### ランチャーとバージョンの選び方
+
+COLMAPはこのアプリに同梱されず、`setup_windows.bat` でもインストールしません。COLMAPを別途インストールまたは展開し、次のように選びます。
+
+| 導入形態 | Step 4で選ぶもの |
+| --- | --- |
+| 公式Windows ZIP | 配布物の最上位にある `COLMAP.bat` を選びます。同梱ライブラリの検索パスが設定されるため、これが推奨です。 |
+| 公式Windows版の `bin/colmap.exe` | これを選んでも構いません。アプリが隣接する最上位の `COLMAP.bat` を検出し、自動でそちらを使います。 |
+| 単体またはカスタム `colmap.exe` | 実行時ライブラリが利用できる状態の場合だけ、直接選びます。この場合も事前の機能検査は行われます。 |
+| PATH上のCOLMAP | 欄を空にします。Windowsでは `COLMAP.bat`、次に `colmap.exe` の順で検索します。 |
+
+COLMAP 4.1は、このルートで使うネイティブ `EQUIRECTANGULAR` カメラモデルを導入した対応下限です。`SfM品質: クオリティ` ではGuided Matchingを使うため、球面カメラの対応修正が入ったCOLMAP 4.2以降を特に推奨します（[4.2の変更履歴](https://github.com/colmap/colmap/blob/4.2.0/CHANGELOG.rst)）。既存プロジェクトや `軽量` / `標準` では、COLMAP 4.1も継続利用できます。
+
+#### 事前検査の内容
+
+本処理の前に、次の順序で検査します。
+
+1. 選択したランチャーを実行し、COLMAP 4.1.0以降であることを確認します。
+2. 選択中の特徴抽出・Matcher・Mapperのヘルプを読み、現在のGUI設定に必要なCLIオプションがすべてあることを確認します。
+3. 分離した一時データベースを作り、入力画像1枚でGPU SIFTを実行します。
+
+事前検査が成功すると、ランチャー、選択したCLI契約、同梱ライブラリ、GPU SIFTの起動を組み合わせて使えることを確認できます。ただし、シーンの全画像が登録されることまでは保証しません。球面Mapperは、後段の `sparse/0` 契約を安定させるため、1つの復元コンポーネントだけを作ります。撮影経路が分断される場合は、複数コンポーネントの出力を期待するのではなく、オーバーラップやMatcher設定を見直してください。
+
+RTX 50系GPUでは古いCUDAビルドがGPU SIFTで止まる場合があります。その場合は、GPUに対応したCUDAアーキテクチャでビルドされたCOLMAPを指定します。
+
+#### 既存プロジェクトを更新する場合
+
+- COLMAP 4.1で成功済みのSparseモデルは、4.2が公開されたという理由だけで再作成する必要はありません。Step 5でそのまま変換できます。
+- 既存のシーン設定はそのまま使えます。公式COLMAP 4.2 Windows版へ移行する場合は、Step 4の欄で新しい `COLMAP.bat` を選びます。
+- 古いアプリ版で未対応の `--Mapper.ba_global_images_ratio` オプションにより停止した場合は、このアプリを更新してStep 4を再実行してください。現在はCOLMAPで対応しているオプションを使います。
+- `bin/colmap.exe` を直接起動して同梱DLLが見つからず停止していた場合は、最上位の `COLMAP.bat` を選ぶか、現在のアプリで再実行してください。現在のアプリは、その実行ファイル選択を配布物のランチャーへ切り替えます。
 
 SfM作業フォルダは `output/colmap_equirect/` です。学習アプリへ渡すJSON/PLYやCubemapデータは、Step 5で `COLMAP球面 → NeRFデータセット(JSON/PLY)` を実行して作ります。
 
@@ -122,6 +152,8 @@ RealityScanからエクスポートする前に、学習に使うコンポーネ
 Step 4で作ったCOLMAP球面sparse、または別途指定した `EQUIRECTANGULAR` / 旧 `SPHERE` カメラのCOLMAP sparseから、JSON/PLYデータセットを作ります。
 
 COLMAP球面SfM入力は同一解像度のERP 360°画像に限定するのが安全です。出力は、LichtFeldでGUTを使うERP 360°データ、またはPostshot / Brush / LichtFeldで扱いやすいPINHOLE Cubemapデータから選びます。
+
+新しいCOLMAPモデルは公式 `EQUIRECTANGULAR` カメラを使います。既存の旧SphereSfM `SPHERE` Sparseモデルもこの球面変換ルートで読み込めるため、変換前にカメラ名や数値IDを手作業で書き換える必要はありません。
 
 ### スケール調整
 
