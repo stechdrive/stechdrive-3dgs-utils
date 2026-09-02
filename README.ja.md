@@ -1,6 +1,6 @@
 # stechdrive-3dgs-utils
 
-**v1.25.2**
+**v1.25.3**
 
 ## これは何？
 
@@ -12,7 +12,7 @@
 
 通常利用は、最新リリースZIPをダウンロードしてください。
 
-[stechdrive-3dgs-utils-v1.25.2.zip をダウンロード](https://github.com/stechdrive/stechdrive-3dgs-utils/releases/download/v1.25.2/stechdrive-3dgs-utils-v1.25.2.zip)
+[stechdrive-3dgs-utils-v1.25.3.zip をダウンロード](https://github.com/stechdrive/stechdrive-3dgs-utils/releases/download/v1.25.3/stechdrive-3dgs-utils-v1.25.3.zip)
 
 ZIPを展開したら、`setup_windows.bat`、続いて `run_gui.bat` を実行します。
 
