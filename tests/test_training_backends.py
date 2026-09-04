@@ -159,6 +159,8 @@ def test_lichtfeld_config_overrides_visible_training_parameters(tmp_path: Path) 
         "--config",
         str(options.config_path),
         "--train",
+        "--export",
+        "ply",
         "--no-splash",
         "--headless",
     ]
@@ -271,6 +273,7 @@ def test_lichtfeld_command_includes_dataset_cli_overrides(tmp_path: Path) -> Non
 
     cmd = build_lichtfeld_training_cmd(options)
 
+    assert cmd[cmd.index("--export") + 1] == "ply"
     assert cmd[cmd.index("--output-name") + 1] == "scene_final"
     assert cmd[cmd.index("--resize_factor") + 1] == "2"
     assert cmd[cmd.index("--max-width") + 1] == "0"

@@ -438,6 +438,8 @@ def build_lichtfeld_training_cmd(options: LichtFeldTrainingOptions) -> list[str]
         "--config",
         str(options.config_path),
         "--train",
+        "--export",
+        "ply",
     ]
     if output_name:
         cmd.extend(["--output-name", output_name])
