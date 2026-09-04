@@ -400,9 +400,9 @@ def extract_selected_frames(
             "-y",
             "-i",
             str(video_path),
-            "-filter_script:v",
+            "-/filter:v",
             filter_script_path,
-            "-vsync",
+            "-fps_mode",
             "vfr",
             *quality_args,
             out_pattern,
@@ -416,7 +416,7 @@ def extract_selected_frames(
 
         if proc.returncode != 0:
             raise_if_cancelled(cancel_event)
-            # Fallback when filter_script:v is unsupported by ffmpeg build.
+            # Fallback when loading the filter graph from a file is unsupported.
             cmd = [
                 ffmpeg_bin,
                 "-hide_banner",
@@ -430,7 +430,7 @@ def extract_selected_frames(
                 str(video_path),
                 "-vf",
                 f"select='{select_expr}'",
-                "-vsync",
+                "-fps_mode",
                 "vfr",
                 *quality_args,
                 out_pattern,
@@ -454,7 +454,7 @@ def extract_selected_frames(
                     str(video_path),
                     "-vf",
                     f"select='{select_expr}'",
-                    "-vsync",
+                    "-fps_mode",
                     "vfr",
                     *quality_args,
                     out_pattern,
