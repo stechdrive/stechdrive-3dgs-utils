@@ -153,6 +153,42 @@ def test_quick_extract_allows_missing_trailing_frame_outputs(tmp_path: Path, mon
     assert not (tmp_path / "images" / "clip_20.jpg").exists()
 
 
+def test_extract_uses_current_ffmpeg_filter_and_framerate_options(tmp_path: Path, monkeypatch) -> None:
+    commands: list[list[str]] = []
+
+    def fake_run_cmd_with_ffmpeg_progress(cmd: list[str], **_kwargs) -> subprocess.CompletedProcess:
+        commands.append(cmd)
+        if len(commands) == 1:
+            return subprocess.CompletedProcess(cmd, 1, "", "filter file option unavailable")
+        out_pattern = Path(cmd[-1])
+        out_pattern.parent.mkdir(parents=True, exist_ok=True)
+        (out_pattern.parent / "00000001.jpg").write_bytes(b"frame")
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    monkeypatch.setattr(
+        "core.extract_frames.run_cmd_with_ffmpeg_progress",
+        fake_run_cmd_with_ffmpeg_progress,
+    )
+
+    extracted = extract_selected_frames(
+        video_path=tmp_path / "input.mp4",
+        ffmpeg_bin="ffmpeg",
+        frame_indices=[0],
+        output_dir=tmp_path / "images",
+        image_ext="jpg",
+        jpg_quality=2,
+        filename_prefix="clip",
+        frame_digits=2,
+    )
+
+    assert extracted == [0]
+    assert "-/filter:v" in commands[0]
+    assert "-vf" in commands[1]
+    assert all("-fps_mode" in command for command in commands)
+    assert all("-vsync" not in command for command in commands)
+    assert all("-filter_script:v" not in command for command in commands)
+
+
 def test_ffmpeg_progress_command_terminates_on_cancel() -> None:
     cancel_event = Event()
     timer = Timer(0.15, cancel_event.set)
