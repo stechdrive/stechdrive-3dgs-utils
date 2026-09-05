@@ -1,6 +1,6 @@
 # stechdrive-3dgs-utils
 
-**v1.25.4**
+**v1.25.5**
 
 ## これは何？
 
@@ -12,7 +12,7 @@
 
 通常利用は、最新リリースZIPをダウンロードしてください。
 
-[stechdrive-3dgs-utils-v1.25.4.zip をダウンロード](https://github.com/stechdrive/stechdrive-3dgs-utils/releases/download/v1.25.4/stechdrive-3dgs-utils-v1.25.4.zip)
+[stechdrive-3dgs-utils-v1.25.5.zip をダウンロード](https://github.com/stechdrive/stechdrive-3dgs-utils/releases/download/v1.25.5/stechdrive-3dgs-utils-v1.25.5.zip)
 
 ZIPを展開したら、`setup_windows.bat`、続いて `run_gui.bat` を実行します。
 
@@ -88,6 +88,8 @@ update.bat
 ```
 
 `update.bat` は公式GitHub Releaseからアプリ本体を更新し、現在の `.venv/` がリリース推奨の依存関係と一致しない場合だけ依存パッケージを更新します。古いリリースに残っていた不要なアプリ管理ファイルは削除しますが、`.venv/`、`.cache/`、`models/`、シーンフォルダ、その他ユーザーフォルダは残します。アプリ本体だけ更新する場合は `update.bat --app-only`、依存だけ更新する場合は `update.bat --deps-only` を使います。環境を最初から作り直す場合は `setup_windows.bat --force` を使います。
+
+`update.bat` は導入済みのFFmpegを更新しません。古いアプリから更新する場合も、動画のフレーム抽出にはFFmpegとFFprobeの両方が7以降である必要があります。Step 1でバージョン非対応と表示された場合は、[FFmpegの更新手順](doc/extract_frames_gui.ja.md)に従って更新し、GUIを再起動してください。実行ファイルのパスを手動指定していた場合は、更新後のものを選び直します。
 
 まだ `update.bat` が入っていない古い展開済みリリースから更新する場合は、GUIを閉じ、新しいZIPを開いて中の `stechdrive-3dgs-utils-v...` フォルダへ入り、その中身を今使っているアプリフォルダへ上書きコピーしてから、既存アプリフォルダの `update.bat` を一度実行します。
 
@@ -275,7 +277,7 @@ COLMAPは外部アプリであり、`setup_windows.bat` ではインストール
 - Python 3.12 (3.12.10で確認)
 - CUDA対応GPU
 - CUDA Toolkit 12.8
-- FFmpeg / FFprobe (`setup_windows.bat` が未検出時にwinget経由で Gyan.FFmpeg を導入)
+- 動画のフレーム抽出にはFFmpeg 7以降と同梱のFFprobe（`setup_windows.bat` が未検出時にwinget経由で Gyan.FFmpeg を導入）
 - アプリ内COLMAPルートを使う場合のみ、別途COLMAPが必要（球面SfMは4.1以降必須、4.2以降推奨）
 
 `setup_windows.bat` で解決される主なPythonパッケージ:
@@ -285,7 +287,7 @@ torch / torchvision / torchaudio from the CUDA 12.8 wheel index
 numpy, opencv-python, Pillow, open3d, ultralytics, tqdm, PySide6, sam3, timm, huggingface-hub, pycocotools
 ```
 
-`setup_windows.bat` は `requirements/` 以下の検証済み固定セットを使い、初回セットアップの再現性を優先します。`update.bat` はアプリ本体と既存の `.venv/` を現在のリリースに揃えます。互換する最新依存を明示的に試したい場合だけ `--latest-deps` を渡します。通常のリリース利用では、更新コマンドは `update.bat` だけです。
+`setup_windows.bat` は `requirements/` 以下の検証済み固定セットを使い、初回セットアップの再現性を優先します。`update.bat` はアプリ本体と既存の `.venv/` を現在のリリースに揃えます。互換する最新依存を明示的に試したい場合だけ `--latest-deps` を渡します。通常のリリース利用では、アプリ本体とPython環境の更新に `update.bat` を使います。FFmpegは必要に応じて上記の手順で別途更新してください。
 
 ## ライセンス
 

@@ -1,6 +1,6 @@
 # stechdrive-3dgs-utils
 
-**v1.25.4**
+**v1.25.5**
 
 ## What Is This?
 
@@ -12,7 +12,7 @@ The main workflow is to organize and mask ERP/equirectangular footage from camer
 
 For normal use, download the latest release ZIP:
 
-[Download stechdrive-3dgs-utils-v1.25.4.zip](https://github.com/stechdrive/stechdrive-3dgs-utils/releases/download/v1.25.4/stechdrive-3dgs-utils-v1.25.4.zip)
+[Download stechdrive-3dgs-utils-v1.25.5.zip](https://github.com/stechdrive/stechdrive-3dgs-utils/releases/download/v1.25.5/stechdrive-3dgs-utils-v1.25.5.zip)
 
 After extracting the ZIP, run `setup_windows.bat`, then `run_gui.bat`.
 
@@ -88,6 +88,8 @@ update.bat
 ```
 
 `update.bat` updates the app files from the official GitHub release and only updates `.venv/` when the current environment does not match the release's recommended dependencies. It also removes obsolete app-managed files from older releases while preserving `.venv/`, `.cache/`, `models/`, scene folders, and other user folders. Use `update.bat --app-only` for app files only or `update.bat --deps-only` for dependencies only. To recreate the environment from scratch, run `setup_windows.bat --force`.
+
+`update.bat` does not upgrade an existing FFmpeg installation. When updating from an older app release, video extraction also requires FFmpeg and FFprobe 7 or newer. If Step 1 reports an unsupported version, follow the [FFmpeg update instructions](doc/extract_frames_gui.md), restart the GUI, and reselect the updated executables if you previously set their paths manually.
 
 If you are updating an older extracted release that does not yet have `update.bat`, close the GUI, open the new ZIP, enter its top-level `stechdrive-3dgs-utils-v...` folder, copy that folder's contents into your existing app folder with overwrite enabled, then run `update.bat` once from the existing app folder.
 
@@ -275,7 +277,7 @@ Use this when you want to exclude people, vehicles, blown-out regions, or simila
 - Python 3.12 (3.12.10 confirmed)
 - CUDA-capable GPU
 - CUDA Toolkit 12.8
-- FFmpeg / FFprobe (`setup_windows.bat` installs Gyan.FFmpeg through winget when missing)
+- FFmpeg 7 or newer and its bundled FFprobe for video extraction (`setup_windows.bat` installs Gyan.FFmpeg through winget when missing)
 - External COLMAP installation only when running an in-app COLMAP route (4.1+ required for spherical SfM; 4.2+ recommended)
 
 Main Python packages resolved by `setup_windows.bat`:
@@ -285,7 +287,7 @@ torch / torchvision / torchaudio from the CUDA 12.8 wheel index
 numpy, opencv-python, Pillow, open3d, ultralytics, tqdm, PySide6, sam3, timm, huggingface-hub, pycocotools
 ```
 
-`setup_windows.bat` uses the pinned verified package set under `requirements/` for reproducible first-time setup. `update.bat` keeps the app and the existing `.venv/` aligned with the current release; pass `--latest-deps` only when you explicitly want to try the latest compatible dependency versions. For normal release users, `update.bat` is the only update command.
+`setup_windows.bat` uses the pinned verified package set under `requirements/` for reproducible first-time setup. `update.bat` keeps the app and the existing `.venv/` aligned with the current release; pass `--latest-deps` only when you explicitly want to try the latest compatible dependency versions. For normal release users, use `update.bat` to update the app and its Python environment. Update FFmpeg separately when needed, as described above.
 
 ## License
 
