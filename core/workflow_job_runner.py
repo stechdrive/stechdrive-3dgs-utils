@@ -399,6 +399,7 @@ def _run_spheresfm_preflight(job: dict, *, cancel_event: CancellationToken | Non
         colmap,
         matcher=str(job["matcher"]),
         quality_preset=str(job["quality_preset"]),
+        loop_detection=bool(job.get("loop_detection", False)),
         use_masks=bool(job["use_masks"]),
     )
 

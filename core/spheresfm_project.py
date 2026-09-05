@@ -69,11 +69,13 @@ def _validate_spheresfm_cli_options(
     matcher: str,
     quality_preset: str,
     use_masks: bool,
+    loop_detection: bool = False,
 ) -> None:
     required_by_command = required_spheresfm_options(
         matcher=matcher,
         quality_preset=quality_preset,
         use_masks=use_masks,
+        loop_detection=loop_detection,
     )
     failures: list[str] = []
     for subcommand, required_options in required_by_command.items():
@@ -105,6 +107,7 @@ def validate_spheresfm_colmap(
     matcher: str = "sequential",
     quality_preset: str = "standard",
     use_masks: bool = False,
+    loop_detection: bool = False,
     check_capabilities: bool = True,
 ) -> tuple[int, int, int]:
     quality_value = str(quality_preset).strip().lower()
@@ -115,12 +118,12 @@ def validate_spheresfm_colmap(
             matcher=matcher,
             quality_preset=quality_value,
             use_masks=use_masks,
+            loop_detection=loop_detection,
         )
     version_text = ".".join(str(part) for part in version)
     print(f"COLMAP {version_text} spherical SfM launcher verified.", flush=True)
     if version < (4, 2, 0):
-        suffix = " for spherical guided matching" if quality_value in {"quality", "robust"} else ""
-        print(f"WARNING: COLMAP 4.2 or newer is recommended{suffix}.", flush=True)
+        print("WARNING: COLMAP 4.2 or newer is recommended.", flush=True)
     return version
 
 

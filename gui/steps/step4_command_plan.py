@@ -11,6 +11,7 @@ from pathlib import Path
 from core.colmap_cli import prefer_official_windows_launcher
 from core.colmap_mixed_project import COLMAP_MIXED_MANIFEST, colmap_erp_rig_groups_for_images
 from core.colmap_normal_camera_contract import normal_camera_groups_for_images
+from core.colmap_rig_export import rig_config_has_current_geometry, rig_views_are_non_overlapping
 from core.dataset_job_spec import metashape_nerf_job, write_dataset_job
 from core.metashape_nerf_dataset import (
     analyze_metashape_nerf_compatibility,
@@ -119,6 +120,11 @@ class Step4CommandPlanMixin:
             if run_sfm:
                 if not run_conversion and not self._colmap_rig_images_dir().is_dir():
                     raise ValueError(i18n.t("STEP4_PIPELINE_DETAIL_COLMAP_NEEDS_RIG"))
+                if (
+                    not run_conversion and self._colmap_plan_has_erp_images(plan)
+                    and not rig_config_has_current_geometry(self._colmap_rig_dir() / "rig_config.json")
+                ):
+                    raise ValueError(i18n.t("COLMAP_REFRESH_RIG_IMAGES"))
                 if not run_conversion and not self._prepare_colmap_sfm_outputs():
                     return []
                 steps.extend(self._build_colmap_sfm_commands(plan=plan, prepared_this_run=run_conversion))
@@ -605,6 +611,9 @@ class Step4CommandPlanMixin:
                 normal_image_list=normal_list if has_normal else None,
                 rig_feature_groups=rig_feature_groups,
                 normal_feature_groups=normal_feature_groups,
+                skip_rig_same_frame=prepared_this_run and rig_views_are_non_overlapping([
+                    view for view in self.view_config.collect_views(include_disabled=True) if view.get("enabled", True)
+                ]),
             )
         )
 
@@ -733,7 +742,8 @@ class Step4CommandPlanMixin:
         return ",".join(f"{param:.12g}" for param in params)
 
     def _build_spheresfm_sfm_commands(self) -> StepCommandQueue:
-        matcher = self.spheresfm_matcher_combo.currentData() or _COLMAP_MATCHER_SEQUENTIAL
+        matcher = _COLMAP_MATCHER_SEQUENTIAL
+        loop_detection = self.spheresfm_loop_detection_cb.isChecked()
         quality_preset = self._spheresfm_quality_preset()
         use_masks = self._spheresfm_uses_masks()
 
@@ -750,6 +760,7 @@ class Step4CommandPlanMixin:
                 camera_params=self._spheresfm_camera_params_arg(),
                 matcher=matcher,
                 quality_preset=quality_preset,
+                loop_detection=loop_detection,
                 use_masks=use_masks,
             ),
         )
@@ -774,6 +785,7 @@ class Step4CommandPlanMixin:
                 use_masks=use_masks,
                 matcher=matcher,
                 quality_preset=quality_preset,
+                loop_detection=loop_detection,
             )
         )
         return [

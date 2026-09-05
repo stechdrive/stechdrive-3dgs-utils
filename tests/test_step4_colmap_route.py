@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from core.colmap_rig_export import prepare_views_for_colmap, write_rig_config_json
 from tests.helpers.step4 import (
     STEP4_SETTINGS_VERSION,
     AppJob,
@@ -396,9 +397,11 @@ def test_colmap_conversion_sfm_does_not_reuse_stale_masks_when_mask_output_is_of
     assert "--ImageReader.mask_path" not in feature_cmd
 
 
+@pytest.mark.parametrize("current_geometry", [False, True])
 def test_colmap_sfm_only_resets_stale_database_and_sparse(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    current_geometry: bool,
 ) -> None:
     _app()
     images = tmp_path / "images"
@@ -407,6 +410,10 @@ def test_colmap_sfm_only_resets_stale_database_and_sparse(
     rig = tmp_path / "output" / "colmap_rig"
     rig_images = rig / "images"
     rig_images.mkdir(parents=True)
+    if current_geometry:
+        write_rig_config_json(
+            tmp_path / "output", prepare_views_for_colmap([{"name": "front", "yaw": 0, "pitch": 0}]), (16, 16)
+        )
     _write_test_image(rig_images / "frame_0001.jpg")
     database = rig / "database.db"
     database.write_bytes(b"stale")
@@ -426,6 +433,14 @@ def test_colmap_sfm_only_resets_stale_database_and_sparse(
     step._set_export_method("colmap")
     step._set_colmap_stage_intents(run_sfm=True, run_conversion=False)
     step.colmap_exec_browse.set_text(str(fake_colmap))
+
+    if not current_geometry:
+        with pytest.raises(ValueError, match=i18n.t("COLMAP_REFRESH_RIG_IMAGES")):
+            step.build_commands()
+        assert database.read_bytes() == b"stale"
+        assert stale_sparse.read_text(encoding="utf-8") == "stale"
+        assert not prompts
+        return
 
     commands = step.build_commands()
 

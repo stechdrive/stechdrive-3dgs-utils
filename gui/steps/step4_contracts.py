@@ -43,10 +43,9 @@ _COLMAP_MAPPER_GLOBAL = "global"
 _COLMAP_MAPPER_GLOMAP = "glomap"
 _COLMAP_MATCHER_SEQUENTIAL = "sequential"
 _COLMAP_MATCHER_EXHAUSTIVE = "exhaustive"
-_SPHERESFM_MATCHER_SPATIAL = "spatial"
-_SPHERESFM_QUALITY_FAST = "fast"
+_SPHERESFM_QUALITY_LIGHT = "light"
+_SPHERESFM_QUALITY_LIGHTEST = "lightest"
 _SPHERESFM_QUALITY_STANDARD = "standard"
-_SPHERESFM_QUALITY_QUALITY = "quality"
 _SPHERESFM_RUN_FULL = "full"
 _SPHERESFM_RUN_SFM_ONLY = "sfm_only"
 _SPHERESFM_RUN_CONVERT_ONLY = "convert_only"
@@ -177,8 +176,9 @@ def is_colmap_gui_unavailable_output(text: str) -> bool:
 
 
 def _normalize_spheresfm_quality_preset(value: str) -> str:
-    if value == _SPHERESFM_QUALITY_FAST:
-        return _SPHERESFM_QUALITY_FAST
-    if value in {_SPHERESFM_QUALITY_QUALITY, "robust"}:
-        return _SPHERESFM_QUALITY_QUALITY
-    return _SPHERESFM_QUALITY_STANDARD
+    from core.spheresfm_cli_contract import normalize_spheresfm_preset
+
+    try:
+        return normalize_spheresfm_preset(value)
+    except ValueError:
+        return _SPHERESFM_QUALITY_STANDARD

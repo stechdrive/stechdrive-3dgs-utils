@@ -231,10 +231,10 @@ Metashapeでベースの360°画像を安定してSfMし、その結果をRealit
 
 ## COLMAP球面SfMルート
 
-1. Step 1からStep 3まではMetashapeルートと同じです。COLMAP球面SfMでは、同一解像度のエクイレクタングラー360°画像だけを入力にするのが安全です。
+1. Step 1からStep 3まではMetashapeルートと同じです。COLMAP球面SfMでは、同一解像度のエクイレクタングラー360°画像だけを入力にします。
 2. [公式COLMAP 4.2.0 Windows CUDA版ZIP](https://github.com/colmap/colmap/releases/download/4.2.0/colmap-x64-windows-cuda.zip)をダウンロード・展開します。Step 4で `COLMAP球面SfMを実行` を選び、最上位の `COLMAP.bat` を指定します。この配布版はRTX 50シリーズに対応しており、そのGPU世代への対応のために自前ビルドする必要はありません。
-3. `Matcher: Sequential`, `SfM品質: 標準` から始めます。COLMAP 4.2.0の `クオリティ` は、回転だけの球面画像組でGuided Matchingが停止する場合があるため、当面は `標準` を使います。
-4. 本処理の前に、選択した特徴抽出・Matcher・Mapperの全オプションを検査し、画像1枚でGPU SIFTを実行します。これは起動互換性の確認であり、後続のマッチングや復元処理までは検査しません。
+3. `処理設定: 標準` は入力解像度のまま、特徴点上限32,768で処理します。時間やGPUメモリを節約したい場合は `軽量`（縦横1/2・16,384点）、`最軽量`（縦横1/4・8,192点）を選びます。照合は動画向けのSequentialに統一し、同じ場所に戻る撮影では `ループ検出` をONにできます。
+4. 実行前にCOLMAPの機能とGPU SIFTの起動を自動確認します。完了後はプレビューでカメラの経路、登録画像、点群を確認します。
 5. Step 5で `COLMAP球面 → NeRFデータセット(JSON/PLY)` を選び、PINHOLEのCubemapデータにするか、LichtFeld向けのERP 360°データにするかを選びます。
 6. 完了後は、`output/colmap_equirect_3dgut/` または `output/colmap_equirect_cubemap/` を下流アプリへ渡します。COLMAP球面SfMの作業ファイルは `output/colmap_equirect/` にまとまります。
 
@@ -244,13 +244,13 @@ COLMAPは外部アプリであり、`setup_windows.bat` ではインストール
 
 | 確認項目 | 選び方 |
 | --- | --- |
-| 球面SfMのバージョン | COLMAP 4.1が対応下限です。公式4.2.0 CUDA版と品質 `標準` を使います。球面Guided Matchingの制約はガイドを参照してください。 |
+| 球面SfMのバージョン | COLMAP 4.1が対応下限です。公式4.2.0 CUDA版を使い、処理設定は細部を重視するか、時間とGPUメモリを節約するかで選びます。 |
 | 公式Windows配布版 | `colmap-x64-windows-cuda.zip` を選び、最上位の `COLMAP.bat` を指定します。同じ配布物の `bin/colmap.exe` を選んでも、バッチランチャーへ自動切り替えします。 |
 | RTX 50シリーズ | 公式4.2.0 CUDA版が対応しています。RTX 5080でGPU SIFT特徴抽出と標準マッチングを確認済みで、RTX 50対応のための自前ビルドは不要です。 |
 | PATH / カスタムビルド | 未指定なら、WindowsではPATH上の `COLMAP.bat`、次に `colmap.exe` を検索します。必要な実行時ライブラリとCLIオプションを持つ単体 `colmap.exe` も使えます。 |
-| 本処理の前 | バージョンと選択中プリセットに必要な全オプションを検査し、画像1枚でGPU SIFTを試します。事前検査の成功は起動互換性の確認であり、全画像の登録成功を保証するものではありません。 |
+| 結果の確認 | 完了後はプレビューで撮影経路と登録画像を確認します。つながりが不足する場合はフレーム間隔・ブレ・画像の重なりや、再訪部分のループ検出を見直します。 |
 
-既存のCOLMAP 4.1で成功済みのSparseモデルは、4.2が公開されたという理由だけで再作成する必要はありません。移行とトラブル対応は [Step 4 / Step 5ガイド](doc/cubemap_tools_gui.ja.md#colmap球面sfmを実行) を参照してください。
+既存のCOLMAP 4.1で成功済みのSparseモデルはそのまま利用できます。設定の選び方と既存プロジェクトの扱いは [Step 4 / Step 5ガイド](doc/cubemap_tools_gui.ja.md#colmap球面sfmを実行) を参照してください。
 
 ## 通常画像・通常動画のマスク前処理
 

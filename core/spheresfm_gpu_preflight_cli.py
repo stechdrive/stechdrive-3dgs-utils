@@ -18,8 +18,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--images-dir", required=True, type=Path)
     parser.add_argument("--work-dir", required=True, type=Path)
     parser.add_argument("--camera-params", required=True)
-    parser.add_argument("--matcher", choices=("sequential", "exhaustive", "spatial"), default="sequential")
-    parser.add_argument("--quality-preset", choices=("fast", "standard", "quality"), default="standard")
+    parser.add_argument("--matcher", choices=("sequential",), default="sequential")
+    parser.add_argument("--quality-preset", choices=("standard", "light", "lightest"), default="standard")
+    parser.add_argument("--loop-detection", action="store_true")
     parser.add_argument("--use-masks", action="store_true")
     return parser
 
@@ -37,6 +38,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         matcher=args.matcher,
         quality_preset=args.quality_preset,
         use_masks=args.use_masks,
+        loop_detection=args.loop_detection,
     )
 
     preflight_images = preflight.reset_preflight_workspace(args.work_dir)

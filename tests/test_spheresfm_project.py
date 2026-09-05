@@ -37,12 +37,12 @@ def test_validate_spheresfm_colmap_checks_selected_command_options(
     assert calls == [
         ("version",),
         ("feature_extractor", "-h"),
-        ("spatial_matcher", "-h"),
+        ("sequential_matcher", "-h"),
         ("mapper", "-h"),
     ]
 
 
-def test_validate_spheresfm_colmap_reports_renamed_mapper_option(
+def test_validate_spheresfm_colmap_reports_missing_mapper_option(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     required = required_spheresfm_options(matcher="sequential", quality_preset="standard", use_masks=False)
@@ -52,13 +52,12 @@ def test_validate_spheresfm_colmap_reports_renamed_mapper_option(
             return _completed(arguments, "COLMAP 4.2.0")
         options = list(required[arguments[0]])
         if arguments[0] == "mapper":
-            options.remove("--Mapper.ba_global_frames_ratio")
-            options.append("--Mapper.ba_global_images_ratio")
+            options.remove("--Mapper.multiple_models")
         return _completed(arguments, "\n".join(options))
 
     monkeypatch.setattr(spheresfm_project, "_run_colmap_capture", fake_run)
 
-    with pytest.raises(RuntimeError, match="--Mapper.ba_global_frames_ratio"):
+    with pytest.raises(RuntimeError, match="--Mapper.multiple_models"):
         spheresfm_project.validate_spheresfm_colmap("colmap.exe")
 
 
@@ -77,4 +76,4 @@ def test_validate_spheresfm_colmap_recommends_42_for_quality(
 
     spheresfm_project.validate_spheresfm_colmap("colmap.exe", quality_preset="quality")
 
-    assert "COLMAP 4.2 or newer is recommended for spherical guided matching" in capsys.readouterr().out
+    assert "COLMAP 4.2 or newer is recommended." in capsys.readouterr().out

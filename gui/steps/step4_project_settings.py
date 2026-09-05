@@ -215,7 +215,7 @@ class Step4ProjectSettingsMixin:
         if isinstance(spheresfm, dict):
             if "use_masks" in spheresfm:
                 self.spheresfm_use_masks_cb.setChecked(bool(spheresfm.get("use_masks")))
-            self._set_combo_data(self.spheresfm_matcher_combo, str(spheresfm.get("matcher", "")).strip())
+            self.spheresfm_loop_detection_cb.setChecked(bool(spheresfm.get("loop_detection", False)))
             self._set_combo_data(
                 self.spheresfm_quality_combo,
                 _normalize_spheresfm_quality_preset(str(spheresfm.get("quality_preset", "")).strip()),
@@ -269,7 +269,7 @@ class Step4ProjectSettingsMixin:
         self.colmap_matcher_combo.currentIndexChanged.connect(lambda _idx: self._save_user_preferences())
         self.colmap_mapper_combo.currentIndexChanged.connect(lambda _idx: self._save_user_preferences())
         self.spheresfm_exec_browse.path_changed.connect(lambda _path: self._save_user_preferences())
-        self.spheresfm_matcher_combo.currentIndexChanged.connect(lambda _idx: self._save_user_preferences())
+        self.spheresfm_loop_detection_cb.toggled.connect(lambda _checked: self._save_user_preferences())
         self.spheresfm_quality_combo.currentIndexChanged.connect(lambda _idx: self._save_user_preferences())
         self.spheresfm_output_shape_combo.currentIndexChanged.connect(lambda _idx: self._save_user_preferences())
         self.spheresfm_profile_combo.currentIndexChanged.connect(lambda _idx: self._save_user_preferences())
@@ -297,7 +297,6 @@ class Step4ProjectSettingsMixin:
                 self._set_combo_data(self.colmap_matcher_combo, matcher)
             if mapper:
                 self._set_combo_data(self.colmap_mapper_combo, mapper)
-            spheresfm_matcher = str(settings.get("spheresfm_matcher", "")).strip()
             spheresfm_quality = str(settings.get("spheresfm_quality_preset", "")).strip()
             spheresfm_output_shape = str(settings.get("spheresfm_output_shape", "")).strip()
             spheresfm_profile = str(settings.get("spheresfm_profile", "")).strip()
@@ -305,8 +304,7 @@ class Step4ProjectSettingsMixin:
             realityscan_pose_prior = str(settings.get("realityscan_pose_prior", "")).strip()
             realityscan_calibration_prior = str(settings.get("realityscan_calibration_prior", "")).strip()
             realityscan_include_rig = settings.get("realityscan_include_rig")
-            if spheresfm_matcher:
-                self._set_combo_data(self.spheresfm_matcher_combo, spheresfm_matcher)
+            self.spheresfm_loop_detection_cb.setChecked(bool(settings.get("spheresfm_loop_detection", False)))
             if spheresfm_quality:
                 self._set_combo_data(
                     self.spheresfm_quality_combo,
@@ -352,7 +350,7 @@ class Step4ProjectSettingsMixin:
                 "matcher": self.colmap_matcher_combo.currentData() or _COLMAP_MATCHER_SEQUENTIAL,
                 "mapper": self.colmap_mapper_combo.currentData() or _COLMAP_MAPPER_GLOBAL,
                 "spheresfm_executable": self.spheresfm_exec_browse.text(),
-                "spheresfm_matcher": self.spheresfm_matcher_combo.currentData() or _COLMAP_MATCHER_SEQUENTIAL,
+                "spheresfm_loop_detection": self.spheresfm_loop_detection_cb.isChecked(),
                 "spheresfm_quality_preset": self._spheresfm_quality_preset(),
                 "spheresfm_output_shape": self.spheresfm_output_shape_combo.currentData() or _OUTPUT_SHAPE_PROJECTED,
                 "spheresfm_profile": self.spheresfm_profile_combo.currentData() or _PROFILE_LICHTFELD,
@@ -366,4 +364,3 @@ class Step4ProjectSettingsMixin:
                 "training_output": self.training_output_browse.text(),
             },
         )
-

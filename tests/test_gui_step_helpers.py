@@ -194,18 +194,18 @@ def test_spheresfm_builder_uses_spherical_camera_and_mask_path(tmp_path: Path) -
     assert feature_cmd[feature_cmd.index("--ImageReader.camera_model") + 1] == "EQUIRECTANGULAR"
     assert feature_cmd[feature_cmd.index("--ImageReader.camera_params") + 1] == "64,32"
     assert feature_cmd[feature_cmd.index("--ImageReader.mask_path") + 1] == str(prepared_masks)
-    assert feature_cmd[feature_cmd.index("--FeatureExtraction.max_image_size") + 1] == "5000"
+    assert feature_cmd[feature_cmd.index("--FeatureExtraction.max_image_size") + 1] == "64"
     assert feature_cmd[feature_cmd.index("--SiftExtraction.max_num_features") + 1] == "32768"
-    assert commands[2][1][commands[2][1].index("--FeatureMatching.guided_matching") + 1] == "1"
-    assert commands[2][1][1] == "spatial_matcher"
+    assert commands[2][1][commands[2][1].index("--FeatureMatching.guided_matching") + 1] == "0"
+    assert commands[2][1][1] == "sequential_matcher"
     assert "--Mapper.sphere_camera" not in commands[3][1]
     assert commands[3][1][commands[3][1].index("--Mapper.multiple_models") + 1] == "0"
-    assert commands[3][1][commands[3][1].index("--Mapper.ba_global_max_num_iterations") + 1] == "75"
+    assert "--Mapper.ba_global_max_num_iterations" not in commands[3][1]
     assert "--Mapper.ba_global_images_ratio" not in commands[3][1]
     assert sparse.is_dir()
 
 
-def test_spheresfm_standard_preset_uses_colmap_frames_ratio_option(tmp_path: Path) -> None:
+def test_spheresfm_standard_preset_uses_colmap_mapper_defaults(tmp_path: Path) -> None:
     images = tmp_path / "images"
     images.mkdir()
     commands = build_spheresfm_commands(
@@ -223,7 +223,7 @@ def test_spheresfm_standard_preset_uses_colmap_frames_ratio_option(tmp_path: Pat
     )
 
     mapper_cmd = commands[-1][1]
-    assert mapper_cmd[mapper_cmd.index("--Mapper.ba_global_frames_ratio") + 1] == "1.2"
+    assert "--Mapper.ba_global_frames_ratio" not in mapper_cmd
     assert "--Mapper.ba_global_images_ratio" not in mapper_cmd
 
 

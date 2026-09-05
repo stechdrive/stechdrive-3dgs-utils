@@ -301,16 +301,16 @@ class SfmStep(BaseStepWidget):
         self.spheresfm_use_masks_cb.setToolTip(i18n.tip("SPHERESFM_USE_MASKS"))
         form.addRow("", self.spheresfm_use_masks_cb)
 
-        self.spheresfm_matcher_combo = self._clone_combo(self.cubemap_step.spheresfm_matcher_combo)
+        self.spheresfm_loop_detection_cb = QCheckBox(i18n.t("SPHERESFM_LOOP_DETECTION"))
+        self.spheresfm_loop_detection_cb.setToolTip(i18n.tip("SPHERESFM_LOOP_DETECTION"))
         self.spheresfm_quality_combo = self._clone_combo(self.cubemap_step.spheresfm_quality_combo)
         pipeline_row = QWidget()
         pipeline_layout = QHBoxLayout(pipeline_row)
         pipeline_layout.setContentsMargins(0, 0, 0, 0)
         pipeline_layout.setSpacing(8)
-        pipeline_layout.addWidget(QLabel(i18n.t("COLMAP_MATCHER_COMPACT")))
-        pipeline_layout.addWidget(self.spheresfm_matcher_combo)
         pipeline_layout.addWidget(QLabel(i18n.t("SPHERESFM_QUALITY_COMPACT")))
         pipeline_layout.addWidget(self.spheresfm_quality_combo)
+        pipeline_layout.addWidget(self.spheresfm_loop_detection_cb)
         pipeline_layout.addStretch()
         form.addRow(pipeline_row)
 
@@ -353,12 +353,12 @@ class SfmStep(BaseStepWidget):
             self.colmap_scale_combo,
             self.colmap_matcher_combo,
             self.colmap_mapper_combo,
-            self.spheresfm_matcher_combo,
             self.spheresfm_quality_combo,
         ):
             combo.currentIndexChanged.connect(self._on_detail_control_changed)
         self.colmap_mapper_combo.currentIndexChanged.connect(self._sync_colmap_glomap_visibility)
         self.spheresfm_use_masks_cb.toggled.connect(self._on_detail_control_changed)
+        self.spheresfm_loop_detection_cb.toggled.connect(self._on_detail_control_changed)
 
     @staticmethod
     def _clone_combo(source: QComboBox) -> QComboBox:
@@ -395,7 +395,7 @@ class SfmStep(BaseStepWidget):
 
             self.spheresfm_exec_browse.set_text(self.cubemap_step.spheresfm_exec_browse.text())
             self.spheresfm_use_masks_cb.setChecked(self.cubemap_step.spheresfm_use_masks_cb.isChecked())
-            self._set_combo_data(self.spheresfm_matcher_combo, self.cubemap_step.spheresfm_matcher_combo.currentData())
+            self.spheresfm_loop_detection_cb.setChecked(self.cubemap_step.spheresfm_loop_detection_cb.isChecked())
             self._set_combo_data(self.spheresfm_quality_combo, self.cubemap_step.spheresfm_quality_combo.currentData())
             self.spheresfm_pose_browse.set_text(self.cubemap_step.spheresfm_pose_browse.text())
         finally:
@@ -417,10 +417,7 @@ class SfmStep(BaseStepWidget):
 
         self.cubemap_step.spheresfm_exec_browse.set_text(self.spheresfm_exec_browse.text())
         self.cubemap_step.spheresfm_use_masks_cb.setChecked(self.spheresfm_use_masks_cb.isChecked())
-        self.cubemap_step._set_combo_data(
-            self.cubemap_step.spheresfm_matcher_combo,
-            self.spheresfm_matcher_combo.currentData(),
-        )
+        self.cubemap_step.spheresfm_loop_detection_cb.setChecked(self.spheresfm_loop_detection_cb.isChecked())
         self.cubemap_step._set_combo_data(
             self.cubemap_step.spheresfm_quality_combo,
             self.spheresfm_quality_combo.currentData(),

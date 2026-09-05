@@ -10,6 +10,11 @@ import json
 import math
 from pathlib import Path
 
+import numpy as np
+
+from core.cubemap_remap import rotation_matrix
+
+RIG_GEOMETRY_VERSION = 2
 COLMAP_RIG_DIRNAME = "colmap_rig"
 COLMAP_IMAGES_DIRNAME = "images"
 COLMAP_MASKS_DIRNAME = "masks"
@@ -102,9 +107,14 @@ def _quat_conjugate(q: tuple[float, float, float, float]) -> tuple[float, float,
 
 
 def cam_from_rig_rotation_quaternion(yaw_deg: float, pitch_deg: float, roll_deg: float = 0.0) -> list[float]:
+    """Camera-from-front rotation in COLMAP's image-right/down/forward axes.
+
+    The remapper uses Y-up ERP rays: conjugate its inverse rotation by
+    diag(1, -1, 1) before expressing it in COLMAP camera coordinates.
+    """
     yaw_rad = math.radians(float(yaw_deg))
-    pitch_rad = math.radians(float(pitch_deg))
-    roll_rad = math.radians(float(roll_deg))
+    pitch_rad = math.radians(-float(pitch_deg))
+    roll_rad = math.radians(-float(roll_deg))
 
     q_yaw = (math.cos(yaw_rad / 2.0), 0.0, math.sin(yaw_rad / 2.0), 0.0)
     q_pitch = (math.cos(pitch_rad / 2.0), math.sin(pitch_rad / 2.0), 0.0, 0.0)
@@ -134,6 +144,10 @@ def build_rig_config(
     rig_name: str = DEFAULT_RIG_NAME,
 ) -> list[dict]:
     cameras: list[dict] = []
+    reference = prepared_views[0] if prepared_views else {}
+    reference_rotation = tuple(cam_from_rig_rotation_quaternion(
+        float(reference.get("yaw", 0.0)), float(reference.get("pitch", 0.0)),
+    ))
     for idx, view in enumerate(prepared_views, start=1):
         camera_name = str(
             view.get("camera_name") or camera_name_for_index(idx, len(prepared_views))
@@ -150,13 +164,40 @@ def build_rig_config(
         if idx == 1:
             camera["ref_sensor"] = True
         else:
-            camera["cam_from_rig_rotation"] = cam_from_rig_rotation_quaternion(
+            rotation = tuple(cam_from_rig_rotation_quaternion(
                 float(view.get("yaw", 0.0)),
                 float(view.get("pitch", 0.0)),
-            )
+            ))
+            camera["cam_from_rig_rotation"] = list(_quat_multiply(rotation, _quat_conjugate(reference_rotation)))
             camera["cam_from_rig_translation"] = [0.0, 0.0, 0.0]
         cameras.append(camera)
-    return [{"cameras": cameras}]
+    return [{"cameras": cameras, "stechdrive_rig_geometry_version": RIG_GEOMETRY_VERSION}]
+
+
+def rig_views_are_non_overlapping(views: list[dict]) -> bool:
+    """Prove disjoint interiors only for subsets of one <=90-degree cube.
+
+    Custom tilted/overlapping layouts fall back to matching within each frame.
+    """
+    if not views or any(not 0 < float(v.get("fov", 90.0)) <= 90.0 for v in views):
+        return False
+    rotations = [rotation_matrix(float(v.get("yaw", 0)), float(v.get("pitch", 0)), False) for v in views]
+    relative = [rotations[0].T @ rotation for rotation in rotations]
+    if any(not np.allclose(rotation, np.round(rotation), atol=1e-8) for rotation in relative):
+        return False
+    directions = [tuple(np.round(rotation[:, 2]).astype(int)) for rotation in relative]
+    return len(set(directions)) == len(directions)
+
+
+def rig_config_has_current_geometry(path: Path) -> bool:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        return isinstance(payload, list) and bool(payload) and all(
+            isinstance(rig, dict) and rig.get("stechdrive_rig_geometry_version") == RIG_GEOMETRY_VERSION
+            for rig in payload
+        )
+    except (OSError, ValueError):
+        return False
 
 
 def write_rig_config_json(

@@ -153,8 +153,8 @@ def test_spheresfm_method_can_queue_3dgut_export_without_projection_views(tmp_pa
     assert commands[4][1][commands[4][1].index("--SequentialMatching.overlap") + 1] == "10"
     assert "--Mapper.sphere_camera" not in commands[5][1]
     assert commands[5][1][commands[5][1].index("--Mapper.multiple_models") + 1] == "0"
-    assert commands[5][1][commands[5][1].index("--Mapper.ba_global_max_num_iterations") + 1] == "33"
-    assert commands[5][1][commands[5][1].index("--Mapper.ba_global_frames_ratio") + 1] == "1.2"
+    assert "--Mapper.ba_global_max_num_iterations" not in commands[5][1]
+    assert "--Mapper.ba_global_frames_ratio" not in commands[5][1]
     assert "--Mapper.ba_global_images_ratio" not in commands[5][1]
     assert transforms_job["sparse_dir"] == str(tmp_path / "output" / "colmap_equirect" / "sparse")
     assert transforms_job["output_dir"] == str(tmp_path / "output" / "colmap_equirect_3dgut")
@@ -441,22 +441,30 @@ def test_spheresfm_convert_only_resets_conversion_outputs_only(tmp_path: Path, m
     assert database.is_file()
 
 
+@pytest.mark.parametrize("saved, expected", [
+    ("quality", "standard"), ("robust", "standard"), ("standard", "standard"),
+    ("fast", "lightest"), ("light", "light"), ("lightest", "lightest"),
+])
 def test_spheresfm_user_preferences_restore_quality_preset(
     tmp_path: Path,
     monkeypatch,
+    saved: str,
+    expected: str,
 ) -> None:
     _app()
     settings_path = tmp_path / "settings.json"
     monkeypatch.setenv("STECHDRIVE_USER_SETTINGS_PATH", str(settings_path))
     settings_path.write_text(
-        json.dumps({"step4_colmap": {"spheresfm_quality_preset": "quality"}}),
+        json.dumps({"step4_colmap": {"spheresfm_quality_preset": saved, "spheresfm_matcher": "exhaustive"}}),
         encoding="utf-8",
     )
 
     step = CubemapStep(Path.cwd())
     step.enable_user_preferences()
 
-    assert step.spheresfm_quality_combo.currentData() == "quality"
+    assert step.spheresfm_quality_combo.currentData() == expected
+    assert not step.spheresfm_loop_detection_cb.isChecked()
+    assert not hasattr(step, "spheresfm_matcher_combo")
 
 
 def test_spheresfm_scene_settings_restore_stage_intents(tmp_path: Path) -> None:
@@ -481,3 +489,42 @@ def test_spheresfm_scene_settings_restore_stage_intents(tmp_path: Path) -> None:
     assert step.pipeline_stage_intent("sfm") is False
     assert step.pipeline_stage_intent("conversion") is True
     assert step._spheresfm_run_scope() == "convert_only"
+
+
+def test_spherical_loop_and_budget_sync_persist_and_reach_commands(tmp_path: Path, monkeypatch) -> None:
+    from gui.steps.sfm_step import SfmStep
+
+    _app()
+    monkeypatch.setenv("STECHDRIVE_USER_SETTINGS_PATH", str(tmp_path / "user-settings.json"))
+    images = tmp_path / "images"
+    images.mkdir()
+    _write_test_image(images / "frame_0001.jpg")
+    executable = tmp_path / "colmap.exe"
+    executable.touch()
+    step = CubemapStep(Path.cwd())
+    step.set_scene_dir(str(tmp_path))
+    step.enable_user_preferences()
+    step.spheresfm_exec_browse.set_text(str(executable))
+    surface = SfmStep(Path.cwd(), step)
+    surface.set_scene_dir(str(tmp_path))
+    surface.show_route("spheresfm")
+    surface.spheresfm_use_masks_cb.setChecked(False)
+    surface._set_combo_data(surface.spheresfm_quality_combo, "light")
+    surface.spheresfm_loop_detection_cb.setChecked(True)
+    assert step._spheresfm_quality_preset() == "light"
+    assert step.spheresfm_loop_detection_cb.isChecked()
+    commands = dict(step.build_commands())
+    assert _workflow_job(commands["spheresfm_preflight"])["loop_detection"] is True
+    feature = commands["spheresfm_feature"]
+    assert feature[feature.index("--FeatureExtraction.max_image_size") + 1] == "32"
+    match = commands["spheresfm_match"]
+    assert match[match.index("--SequentialMatching.loop_detection") + 1] == "1"
+    step._write_export_settings()
+    restored = CubemapStep(Path.cwd())
+    restored.set_scene_dir(str(tmp_path))
+    assert restored._spheresfm_quality_preset() == "light"
+    assert restored.spheresfm_loop_detection_cb.isChecked()
+    preferences = CubemapStep(Path.cwd())
+    preferences.enable_user_preferences()
+    assert preferences._spheresfm_quality_preset() == "light"
+    assert preferences.spheresfm_loop_detection_cb.isChecked()

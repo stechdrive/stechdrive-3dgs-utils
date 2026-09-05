@@ -233,8 +233,8 @@ Use this route when Metashape aligns the base 360° images well, but you want Re
 
 1. Use Steps 1-3 in the same way as the Metashape route. For COLMAP spherical SfM, use same-resolution equirectangular 360° images only.
 2. Download the [official COLMAP 4.2.0 Windows CUDA ZIP](https://github.com/colmap/colmap/releases/download/4.2.0/colmap-x64-windows-cuda.zip) and extract it. In Step 4, choose `Run COLMAP Spherical SfM` and select the top-level `COLMAP.bat`. This package supports RTX 50-series GPUs; a custom build is not required for that GPU generation.
-3. Start with `Matcher: Sequential` and `SfM Quality: Standard`. In COLMAP 4.2.0, `Quality` guided matching can stop on spherical image pairs showing pure rotation; use `Standard` for now.
-4. Before processing all images, the app checks the selected feature, matcher, and mapper options and runs a one-image GPU SIFT preflight. This checks startup compatibility, not the later matching or reconstruction stages.
+3. `Processing: Standard` uses input resolution and up to 32,768 features. Choose `Light` (half width/height, 16,384 features) or `Lightest` (quarter width/height, 8,192 features) to save time and GPU memory. All settings use video-oriented Sequential matching; enable `Loop detection` when your capture revisits places.
+4. The app automatically checks COLMAP capabilities and GPU SIFT startup before processing. Afterward, inspect the camera path, registered images, and point cloud in the preview.
 5. In Step 5, choose `COLMAP Spherical -> NeRF Dataset (JSON/PLY)`, then choose PINHOLE cubemap output or ERP 360° data for LichtFeld.
 6. After completion, pass `output/colmap_equirect_3dgut/` or `output/colmap_equirect_cubemap/` to downstream apps. COLMAP spherical SfM working files stay under `output/colmap_equirect/`.
 
@@ -244,13 +244,13 @@ COLMAP is an external application and is not installed by `setup_windows.bat`.
 
 | Check | Guidance |
 | --- | --- |
-| Spherical SfM version | COLMAP 4.1 is the supported minimum. Use the official 4.2.0 CUDA package with `Standard` quality; see the guide for the spherical guided-matching limitation. |
+| Spherical SfM version | COLMAP 4.1 is the supported minimum. Use the official 4.2.0 CUDA package and choose a processing setting based on detail retention, time, and GPU memory. |
 | Official Windows package | Choose `colmap-x64-windows-cuda.zip` and select the top-level `COLMAP.bat`. Selecting that package's `bin/colmap.exe` also switches to the batch launcher automatically. |
 | RTX 50-series | The official 4.2.0 CUDA package supports this GPU generation. GPU SIFT extraction and standard matching were verified on an RTX 5080; no custom build is needed for RTX 50 support. |
 | PATH or custom build | Leaving the field blank searches for `COLMAP.bat`, then `colmap.exe` on Windows. A standalone `colmap.exe` remains supported when it has all required runtime libraries and CLI options. |
-| Before a full run | The app verifies the version and exact options needed by the selected preset, then tests GPU SIFT with one image. Passing this preflight confirms startup compatibility, not that every scene image will register. |
+| Reviewing results | Inspect the capture path and registered images in the preview. If connections are missing, review frame spacing, blur, overlap, and loop detection for revisited places. |
 
-Existing successful COLMAP 4.1 sparse models do not need to be rebuilt only because COLMAP 4.2 is available. See the [Step 4 / Step 5 guide](doc/cubemap_tools_gui.md#run-colmap-spherical-sfm) for migration and troubleshooting details.
+Existing successful COLMAP 4.1 sparse models can still be used. See the [Step 4 / Step 5 guide](doc/cubemap_tools_gui.md#run-colmap-spherical-sfm) for choosing settings and working with existing projects.
 
 ## Mask Preprocessing for Normal Images
 

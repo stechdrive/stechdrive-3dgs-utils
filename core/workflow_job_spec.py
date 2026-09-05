@@ -172,6 +172,7 @@ def spheresfm_preflight_job(
     matcher: str,
     quality_preset: str,
     use_masks: bool,
+    loop_detection: bool = False,
 ) -> dict[str, Any]:
     return {
         "schema_version": WORKFLOW_JOB_SCHEMA_VERSION,
@@ -182,6 +183,7 @@ def spheresfm_preflight_job(
         "camera_params": str(camera_params),
         "matcher": str(matcher),
         "quality_preset": str(quality_preset),
+        "loop_detection": bool(loop_detection),
         "use_masks": bool(use_masks),
     }
 
@@ -333,6 +335,8 @@ def _validate_spheresfm_preflight_job(payload: Mapping[str, Any]) -> None:
     if quality_preset not in SPHERESFM_QUALITY_PRESETS:
         raise ValueError(f"Unsupported workflow quality preset: {quality_preset}")
     require_bool(payload, "use_masks", label="workflow")
+    if "loop_detection" in payload:
+        require_bool(payload, "loop_detection", label="workflow")
 
 
 def _validate_spheresfm_prepare_job(payload: Mapping[str, Any]) -> None:

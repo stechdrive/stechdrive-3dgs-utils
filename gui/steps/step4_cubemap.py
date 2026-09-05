@@ -64,9 +64,8 @@ from gui.steps.step4_contracts import (
     _PROFILE_LICHTFELD,
     _PROFILE_POSTSHOT,
     _PROFILE_REALITYSCAN,
-    _SPHERESFM_MATCHER_SPATIAL,
-    _SPHERESFM_QUALITY_FAST,
-    _SPHERESFM_QUALITY_QUALITY,
+    _SPHERESFM_QUALITY_LIGHT,
+    _SPHERESFM_QUALITY_LIGHTEST,
     _SPHERESFM_QUALITY_STANDARD,
     _SPHERESFM_REPOSITORY_URL,
     is_colmap_gui_unavailable_output,  # noqa: F401 - re-exported for existing tests/imports
@@ -335,29 +334,23 @@ class CubemapStep(
         self.spheresfm_use_masks_cb.setChecked(True)
         spheresfm_form.addRow("", self.spheresfm_use_masks_cb)
 
-        self.spheresfm_matcher_combo = QComboBox()
-        self.spheresfm_matcher_combo.setToolTip(i18n.tip("SPHERESFM_MATCHER"))
-        self.spheresfm_matcher_combo.addItem(i18n.t("COLMAP_MATCHER_SEQUENTIAL"), _COLMAP_MATCHER_SEQUENTIAL)
-        self.spheresfm_matcher_combo.addItem(i18n.t("COLMAP_MATCHER_EXHAUSTIVE"), _COLMAP_MATCHER_EXHAUSTIVE)
-        self.spheresfm_matcher_combo.addItem(i18n.t("SPHERESFM_MATCHER_SPATIAL"), _SPHERESFM_MATCHER_SPATIAL)
-        self.spheresfm_matcher_combo.setFixedWidth(150)
+        self.spheresfm_loop_detection_cb = QCheckBox(i18n.t("SPHERESFM_LOOP_DETECTION"))
+        self.spheresfm_loop_detection_cb.setToolTip(i18n.tip("SPHERESFM_LOOP_DETECTION"))
 
         self.spheresfm_quality_combo = QComboBox()
         self.spheresfm_quality_combo.setToolTip(i18n.tip("SPHERESFM_QUALITY_PRESET"))
-        self.spheresfm_quality_combo.addItem(i18n.t("SPHERESFM_QUALITY_FAST"), _SPHERESFM_QUALITY_FAST)
         self.spheresfm_quality_combo.addItem(i18n.t("SPHERESFM_QUALITY_STANDARD"), _SPHERESFM_QUALITY_STANDARD)
-        self.spheresfm_quality_combo.addItem(i18n.t("SPHERESFM_QUALITY_QUALITY"), _SPHERESFM_QUALITY_QUALITY)
-        self.spheresfm_quality_combo.setCurrentIndex(1)
+        self.spheresfm_quality_combo.addItem(i18n.t("SPHERESFM_QUALITY_LIGHT"), _SPHERESFM_QUALITY_LIGHT)
+        self.spheresfm_quality_combo.addItem(i18n.t("SPHERESFM_QUALITY_LIGHTEST"), _SPHERESFM_QUALITY_LIGHTEST)
         self.spheresfm_quality_combo.setFixedWidth(150)
 
         self.spheresfm_pipeline_row = QWidget()
         spheresfm_pipeline_layout = QHBoxLayout(self.spheresfm_pipeline_row)
         spheresfm_pipeline_layout.setContentsMargins(0, 0, 0, 0)
         spheresfm_pipeline_layout.setSpacing(8)
-        spheresfm_pipeline_layout.addWidget(QLabel(i18n.t("COLMAP_MATCHER_COMPACT")))
-        spheresfm_pipeline_layout.addWidget(self.spheresfm_matcher_combo)
         spheresfm_pipeline_layout.addWidget(QLabel(i18n.t("SPHERESFM_QUALITY_COMPACT")))
         spheresfm_pipeline_layout.addWidget(self.spheresfm_quality_combo)
+        spheresfm_pipeline_layout.addWidget(self.spheresfm_loop_detection_cb)
         spheresfm_pipeline_layout.addStretch()
         spheresfm_form.addRow(self.spheresfm_pipeline_row)
 

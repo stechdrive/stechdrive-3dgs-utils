@@ -15,7 +15,7 @@ from core.spheresfm_cli_contract import (
     spheresfm_mapper_options,
     spheresfm_matcher_subcommand,
     spheresfm_matching_options,
-    spheresfm_sequential_overlap,
+    spheresfm_sequential_options,
 )
 from gui.common.runner_types import ExternalCommandQueue
 
@@ -68,6 +68,7 @@ class ColmapSfmCommand:
     normal_camera_model: str = "SIMPLE_RADIAL"
     rig_feature_groups: tuple[ColmapRigFeatureGroup, ...] = ()
     normal_feature_groups: tuple[ColmapNormalFeatureGroup, ...] = ()
+    skip_rig_same_frame: bool = False
 
 
 @dataclass(frozen=True)
@@ -81,6 +82,7 @@ class SphereSfmCommand:
     use_masks: bool
     matcher: str
     quality_preset: str
+    loop_detection: bool = False
 
 
 def build_metashape_nerf_cmd(options: MetashapeNerfCommand) -> AppJob:
@@ -149,6 +151,11 @@ def build_colmap_sfm_commands(options: ColmapSfmCommand) -> ExternalCommandQueue
         "--database_path",
         str(options.database),
     )
+    if options.run_rig_config:
+        matcher_cmd.extend([
+            "--FeatureMatching.rig_verification", "1",
+            "--FeatureMatching.skip_image_pairs_in_same_frame", "1" if options.skip_rig_same_frame else "0",
+        ])
 
     if options.mapper == "global":
         mapper_cmd = build_colmap_command(
@@ -185,8 +192,15 @@ def build_colmap_sfm_commands(options: ColmapSfmCommand) -> ExternalCommandQueue
             "--output_path",
             str(options.sparse),
         )
-        if options.run_rig_config:
-            mapper_cmd.extend(["--Mapper.ba_refine_sensor_from_rig", "1"])
+    if options.run_rig_config and options.mapper != "glomap":
+        prefix = "GlobalMapper" if options.mapper == "global" else "Mapper"
+        sensor_option = "refine_sensor_from_rig" if options.mapper == "global" else "ba_refine_sensor_from_rig"
+        mapper_cmd.extend([f"--{prefix}.{sensor_option}", "0"])
+        # Global COLMAP has no per-camera constant-intrinsics CLI list.
+        # Keep ordinary-photo calibration available in mixed projects.
+        if not options.run_normal_feature:
+            for parameter in ("focal_length", "principal_point", "extra_params"):
+                mapper_cmd.extend([f"--{prefix}.ba_refine_{parameter}", "0"])
 
     steps.extend(
         [
@@ -216,6 +230,8 @@ def _rig_feature_cmd(
         "PINHOLE",
         "--ImageReader.camera_params",
         camera_params,
+        "--SiftExtraction.max_num_features",
+        "8192",
     )
     if image_list is not None:
         cmd.extend(["--image_list_path", str(image_list)])
@@ -280,31 +296,14 @@ def build_spheresfm_commands(options: SphereSfmCommand) -> ExternalCommandQueue:
     )
     if options.use_masks:
         feature_cmd.extend(["--ImageReader.mask_path", str(options.prepared_masks_dir)])
-    feature_cmd.extend(spheresfm_feature_options(options.quality_preset))
-
-    if options.matcher == "spatial":
-        matcher_cmd = build_colmap_command(
-            options.colmap,
-            "spatial_matcher",
-            "--database_path",
-            str(options.database),
-            "--SpatialMatching.max_distance",
-            "50",
-        )
-        matcher_cmd.extend(spheresfm_matching_options(options.quality_preset))
-    else:
-        matcher_name = spheresfm_matcher_subcommand(options.matcher)
-        matcher_cmd = build_colmap_command(
-            options.colmap,
-            matcher_name,
-            "--database_path",
-            str(options.database),
-        )
-        matcher_cmd.extend(spheresfm_matching_options(options.quality_preset))
-        if options.matcher != "exhaustive":
-            matcher_cmd.extend(
-                ["--SequentialMatching.overlap", spheresfm_sequential_overlap(options.quality_preset)]
-            )
+    input_size = tuple(int(value.strip()) for value in options.camera_params.split(","))
+    feature_cmd.extend(spheresfm_feature_options(options.quality_preset, input_size))
+    matcher_cmd = build_colmap_command(
+        options.colmap, spheresfm_matcher_subcommand(options.matcher),
+        "--database_path", str(options.database),
+        *spheresfm_matching_options(options.quality_preset),
+        *spheresfm_sequential_options(options.loop_detection),
+    )
 
     mapper_cmd = build_colmap_command(
         options.colmap,
