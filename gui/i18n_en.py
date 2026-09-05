@@ -619,9 +619,11 @@ STRINGS: dict[str, str] = {
     "SPHERESFM_POSE_NOT_FOUND": "POS file was not found: {path}",
     "SPHERESFM_RTX50_CUDA_ERROR_TITLE": "COLMAP CUDA compatibility error",
     "SPHERESFM_RTX50_CUDA_ERROR_BODY": (
-        "COLMAP GPU processing stopped with a CUDA architecture mismatch error commonly seen on RTX 50-series GPUs.\n\n"
-        "The selected COLMAP package was probably not built for RTX 50-series GPUs (sm_120). "
-        "Select a COLMAP build made with CUDA 13.x or newer and CMAKE_CUDA_ARCHITECTURES=120.\n\n"
+        "COLMAP GPU processing encountered a CUDA compatibility error.\n\n"
+        "The official COLMAP 4.2.0 Windows CUDA package supports RTX 50-series GPUs. "
+        "Extract the official CUDA ZIP and select its top-level COLMAP.bat. "
+        "A custom build is not needed for RTX 50 support. "
+        "If the error persists with the official package, check the NVIDIA driver and the log.\n\n"
         "Log: {log_path}"
     ),
     "COLMAP_MATCHER_COMPACT": "Matcher:",
@@ -1549,16 +1551,16 @@ TIPS: dict[str, str] = {
     "POSTSHOT_EXPORT_SPLAT": "Optional PLY or SPZ export path after training. A bare filename is written under Training Output.",
     "COLMAP_REPOSITORY_LINK": "Open the official COLMAP GitHub repository for COLMAP source and build information.",
     "SPHERESFM_REPOSITORY_LINK": "Open the official COLMAP GitHub repository. COLMAP is not bundled with this app.",
-    "COLMAP_EXECUTABLE": "Select the COLMAP launcher. For an official Windows package, choose COLMAP.bat; selecting its bin/colmap.exe also switches to the packaged launcher automatically.",
+    "COLMAP_EXECUTABLE": "Extract the official Windows CUDA package and select COLMAP.bat. Official 4.2.0 also supports RTX 50-series GPUs without a custom build. Selecting bin/colmap.exe automatically uses the packaged launcher.",
     "GLOMAP_EXECUTABLE": "Path to glomap executable when using the legacy GLOMAP mapper. Not needed for COLMAP Global Mapper.",
-    "SPHERESFM_EXECUTABLE": "Select an official COLMAP 4.1+ launcher (4.2 recommended). For a Windows package, choose COLMAP.bat. This route uses the native EQUIRECTANGULAR camera model.",
+    "SPHERESFM_EXECUTABLE": "Extract the official 4.2.0 Windows CUDA package and select COLMAP.bat. RTX 50-series GPUs are supported. Use Standard quality for spherical SfM. Existing 4.1 installations remain supported.",
     "SPHERESFM_USE_MASKS": "When enabled, Step 3 masks are used as excluded areas during SfM. The app automatically converts them to the required format.",
     "SPHERESFM_MATCHER": (
         "Sequential is fast and suited to ordered video frames.\n"
         "Exhaustive can improve coverage but compares all pairs and can become extremely slow on large sets.\n"
         "Spatial uses pose priors already present in the COLMAP database."
     ),
-    "SPHERESFM_QUALITY_PRESET": "Fast shortens processing time. Standard balances processing time and SfM result quality. Quality spends more time estimating camera positions and sparse points more carefully.",
+    "SPHERESFM_QUALITY_PRESET": "Start with Standard to balance time and quality, or Fast for shorter trial runs. Quality spends more time on estimation, but COLMAP 4.2.0 can stop on spherical image pairs showing pure rotation, so Standard is recommended for now.",
     "SPHERESFM_POSE_FILE": "Legacy setting retained for old project files. Official COLMAP spherical SfM does not import this file here.",
     "SPHERESFM_OPEN_GUI": "Open the COLMAP spherical SfM result in COLMAP GUI to inspect camera positions and sparse points. Display requires a GUI-capable COLMAP build.",
     "SCENE_PREVIEW_OPEN": "Open a read-only preview of SfM results or dataset output to inspect cameras, points, and image links.",

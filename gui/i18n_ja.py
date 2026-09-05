@@ -622,9 +622,11 @@ STRINGS: dict[str, str] = {
     "SPHERESFM_POSE_NOT_FOUND": "POSファイルが見つかりません: {path}",
     "SPHERESFM_RTX50_CUDA_ERROR_TITLE": "COLMAP CUDA互換性エラー",
     "SPHERESFM_RTX50_CUDA_ERROR_BODY": (
-        "COLMAPのGPU処理が、RTX 50系でよく出るCUDAアーキテクチャ不一致エラーで停止しました。\n\n"
-        "選択したCOLMAPパッケージがRTX 50系 (sm_120) 向けにビルドされていない可能性があります。"
-        "CUDA 13.x以降と CMAKE_CUDA_ARCHITECTURES=120 でビルドされたCOLMAPを指定してください。\n\n"
+        "COLMAPのGPU処理でCUDA互換性エラーが発生しました。\n\n"
+        "RTX 50シリーズには公式COLMAP 4.2.0のWindows CUDA版が対応しています。"
+        "公式CUDA版ZIPを展開し、最上位のCOLMAP.batを指定してください。"
+        "RTX 50対応のための自前ビルドは不要です。"
+        "公式版でも続く場合は、NVIDIAドライバーとログを確認してください。\n\n"
         "ログ: {log_path}"
     ),
     "COLMAP_MATCHER_COMPACT": "Matcher:",
@@ -1548,16 +1550,16 @@ TIPS: dict[str, str] = {
     "POSTSHOT_EXPORT_SPLAT": "学習後にPLYまたはSPZを書き出すパスです。ファイル名だけならTraining Output内に保存します",
     "COLMAP_REPOSITORY_LINK": "COLMAPの公式GitHubリポジトリを開きます。COLMAP本体やビルド情報を確認できます",
     "SPHERESFM_REPOSITORY_LINK": "公式COLMAPのGitHubリポジトリを開きます。COLMAP本体は、このアプリには同梱されていません",
-    "COLMAP_EXECUTABLE": "この環境で使うCOLMAPランチャーです。公式Windows配布版ではCOLMAP.batを選びます。bin内のcolmap.exeを選んだ場合も、同梱のCOLMAP.batを自動使用します",
+    "COLMAP_EXECUTABLE": "公式Windows CUDA版を展開してCOLMAP.batを選びます。公式4.2.0はRTX 50シリーズにも対応し、自前ビルドは不要です。bin内のcolmap.exeを選んだ場合も、同梱ランチャーを自動使用します",
     "GLOMAP_EXECUTABLE": "GLOMAP mapperを選ぶ場合に使う glomap.exe のパス。COLMAPのGlobal Mapperを使う場合は不要です",
-    "SPHERESFM_EXECUTABLE": "公式COLMAP 4.1以降（4.2推奨）のランチャーを指定します。Windows配布版ではCOLMAP.batを選び、ネイティブEQUIRECTANGULARカメラで球面画像SfMを行います",
+    "SPHERESFM_EXECUTABLE": "公式4.2.0のWindows CUDA版を展開してCOLMAP.batを選びます。RTX 50シリーズにも対応しています。球面SfMは品質「標準」を推奨します。既存の4.1も利用できます",
     "SPHERESFM_USE_MASKS": "ONにするとStep 3のマスクをSfM時の除外範囲として使います。必要な形式への変換はアプリが自動で行います",
     "SPHERESFM_MATCHER": (
         "Sequentialは高速で動画の連番フレーム向けです。\n"
         "Exhaustiveは全ペアを照合するため精度が出る場合がありますが、枚数が増えると極端に遅くなることがあります。\n"
         "SpatialはCOLMAP database内にある位置事前情報で近傍画像を照合します"
     ),
-    "SPHERESFM_QUALITY_PRESET": "軽量は処理時間を短くします。標準は処理時間とSfM結果の品質のバランスを取ります。クオリティは時間をかけて、カメラ位置と点群をより丁寧に推定します",
+    "SPHERESFM_QUALITY_PRESET": "まず標準で処理時間と品質のバランスを確認し、短時間の試行には軽量を使います。クオリティは時間をかけて推定しますが、COLMAP 4.2.0では回転だけの球面画像組で停止する場合があるため、当面は標準を推奨します",
     "SPHERESFM_POSE_FILE": "旧プロジェクト設定との互換用です。公式COLMAP球面SfMでは、この画面から位置ファイルを取り込みません",
     "SPHERESFM_OPEN_GUI": "COLMAP球面SfMの結果をCOLMAP GUIで開き、カメラ位置と点群を確認します。表示にはGUI対応のCOLMAPビルドが必要です",
     "SCENE_PREVIEW_OPEN": "SfM結果またはデータセット出力を読み取り専用で開き、カメラ・点群・画像対応を確認します。",

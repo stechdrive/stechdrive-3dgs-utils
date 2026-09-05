@@ -226,15 +226,15 @@ Use this route when Metashape aligns the base 360° images well, but you want Re
 
 1. Use Steps 1-3 in the same way as the Metashape route.
 2. In Step 4, choose `Run COLMAP SfM`. 360° images are expanded into cubemap rigs, while normal images remain normal cameras.
-3. Confirm the [COLMAP](https://github.com/colmap/colmap) launcher or GLOMAP executable, matcher, and mapper, then run it. For an official Windows COLMAP package, select its top-level `COLMAP.bat`.
+3. Confirm the COLMAP launcher or GLOMAP executable, matcher, and mapper, then run it. For Windows, download the [official COLMAP 4.2.0 CUDA ZIP](https://github.com/colmap/colmap/releases/download/4.2.0/colmap-x64-windows-cuda.zip), extract it, and select its top-level `COLMAP.bat`.
 4. After completion, pass `output/colmap_rig/` as a COLMAP dataset to COLMAP-compatible 3DGS tools. When no extra conversion is needed, you can skip Step 5 and continue to training.
 
 ## COLMAP Spherical SfM Route
 
 1. Use Steps 1-3 in the same way as the Metashape route. For COLMAP spherical SfM, use same-resolution equirectangular 360° images only.
-2. In Step 4, choose `Run COLMAP Spherical SfM` and select an official COLMAP 4.1+ launcher. COLMAP 4.2 or newer is recommended. With the official Windows package, select the top-level `COLMAP.bat`; if you select its `bin/colmap.exe`, the app automatically uses the adjacent batch launcher so packaged libraries are available.
-3. On RTX 50-series GPUs, older CUDA builds can stop during GPU SIFT. If that happens, select a COLMAP build made with a CUDA architecture that supports the GPU.
-4. Start with `Matcher: Sequential` and `SfM Quality: Standard`. Before processing all images, the app checks the selected feature, matcher, and mapper options and runs a one-image GPU SIFT preflight.
+2. Download the [official COLMAP 4.2.0 Windows CUDA ZIP](https://github.com/colmap/colmap/releases/download/4.2.0/colmap-x64-windows-cuda.zip) and extract it. In Step 4, choose `Run COLMAP Spherical SfM` and select the top-level `COLMAP.bat`. This package supports RTX 50-series GPUs; a custom build is not required for that GPU generation.
+3. Start with `Matcher: Sequential` and `SfM Quality: Standard`. In COLMAP 4.2.0, `Quality` guided matching can stop on spherical image pairs showing pure rotation; use `Standard` for now.
+4. Before processing all images, the app checks the selected feature, matcher, and mapper options and runs a one-image GPU SIFT preflight. This checks startup compatibility, not the later matching or reconstruction stages.
 5. In Step 5, choose `COLMAP Spherical -> NeRF Dataset (JSON/PLY)`, then choose PINHOLE cubemap output or ERP 360° data for LichtFeld.
 6. After completion, pass `output/colmap_equirect_3dgut/` or `output/colmap_equirect_cubemap/` to downstream apps. COLMAP spherical SfM working files stay under `output/colmap_equirect/`.
 
@@ -244,8 +244,9 @@ COLMAP is an external application and is not installed by `setup_windows.bat`.
 
 | Check | Guidance |
 | --- | --- |
-| Spherical SfM version | COLMAP 4.1 is the supported minimum. COLMAP 4.2 or newer is recommended, especially for the `Quality` preset that uses spherical guided matching. |
-| Official Windows package | Select the top-level `COLMAP.bat`. Selecting that package's `bin/colmap.exe` is also safe because the app switches to the adjacent batch launcher automatically. |
+| Spherical SfM version | COLMAP 4.1 is the supported minimum. Use the official 4.2.0 CUDA package with `Standard` quality; see the guide for the spherical guided-matching limitation. |
+| Official Windows package | Choose `colmap-x64-windows-cuda.zip` and select the top-level `COLMAP.bat`. Selecting that package's `bin/colmap.exe` also switches to the batch launcher automatically. |
+| RTX 50-series | The official 4.2.0 CUDA package supports this GPU generation. GPU SIFT extraction and standard matching were verified on an RTX 5080; no custom build is needed for RTX 50 support. |
 | PATH or custom build | Leaving the field blank searches for `COLMAP.bat`, then `colmap.exe` on Windows. A standalone `colmap.exe` remains supported when it has all required runtime libraries and CLI options. |
 | Before a full run | The app verifies the version and exact options needed by the selected preset, then tests GPU SIFT with one image. Passing this preflight confirms startup compatibility, not that every scene image will register. |
 

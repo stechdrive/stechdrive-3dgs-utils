@@ -39,6 +39,8 @@ Metashape結果を使う場合は、カメラをAgisoft XML、疎点群をStanfo
 
 Metashapeを使わず、このアプリから[COLMAP](https://github.com/colmap/colmap)またはGLOMAPでSfMしたい場合に選びます。
 
+Windowsでは[公式COLMAP 4.2.0 CUDA版ZIP](https://github.com/colmap/colmap/releases/download/4.2.0/colmap-x64-windows-cuda.zip)を使います。ZIPを展開し、最上位の `COLMAP.bat` を選びます。RTX 50シリーズにも自前ビルドなしで対応しています。
+
 - 360°画像はCubemap Rigへ展開します
 - 通常画像や通常動画フレームは通常カメラとして扱います
 - 混在ソースを一つのCOLMAPデータセットとして処理できます
@@ -54,16 +56,28 @@ Metashapeを使わず、このアプリから[COLMAP](https://github.com/colmap/
 
 #### ランチャーとバージョンの選び方
 
-COLMAPはこのアプリに同梱されず、`setup_windows.bat` でもインストールしません。COLMAPを別途インストールまたは展開し、次のように選びます。
+COLMAPはこのアプリに同梱されず、`setup_windows.bat` でもインストールしません。[公式COLMAP 4.2.0 Windows CUDA版ZIP](https://github.com/colmap/colmap/releases/download/4.2.0/colmap-x64-windows-cuda.zip)をダウンロードして新しいフォルダへ展開し、最上位の `COLMAP.bat` を選びます。このGPU処理を使うルートでは `cuda` 版を選んでください。`nocuda` 版はCUDA処理に対応していません。
 
 | 導入形態 | Step 4で選ぶもの |
 | --- | --- |
-| 公式Windows ZIP | 配布物の最上位にある `COLMAP.bat` を選びます。同梱ライブラリの検索パスが設定されるため、これが推奨です。 |
+| 公式Windows CUDA版ZIP | 配布物の最上位にある `COLMAP.bat` を選びます。同梱ライブラリの検索パスが設定されるため、これが推奨です。 |
 | 公式Windows版の `bin/colmap.exe` | これを選んでも構いません。アプリが隣接する最上位の `COLMAP.bat` を検出し、自動でそちらを使います。 |
 | 単体またはカスタム `colmap.exe` | 実行時ライブラリが利用できる状態の場合だけ、直接選びます。この場合も事前の機能検査は行われます。 |
 | PATH上のCOLMAP | 欄を空にします。Windowsでは `COLMAP.bat`、次に `colmap.exe` の順で検索します。 |
 
-COLMAP 4.1は、このルートで使うネイティブ `EQUIRECTANGULAR` カメラモデルを導入した対応下限です。`SfM品質: クオリティ` ではGuided Matchingを使うため、球面カメラの対応修正が入ったCOLMAP 4.2以降を特に推奨します（[4.2の変更履歴](https://github.com/colmap/colmap/blob/4.2.0/CHANGELOG.rst)）。既存プロジェクトや `軽量` / `標準` では、COLMAP 4.1も継続利用できます。
+COLMAP 4.1は、このルートで使うネイティブ `EQUIRECTANGULAR` カメラモデルを導入した対応下限です。公式4.2.0 CUDA版を使い、`Matcher: Sequential`、`SfM品質: 標準` から始めます。既存のCOLMAP 4.1プロジェクトも引き続き利用できます。
+
+#### RTX 50シリーズへの対応
+
+公式4.2.0 Windows CUDA版はRTX 50シリーズに対応しています。このGPU世代への対応のために自前ビルドする必要はありません。[公式ビルド設定](https://github.com/colmap/colmap/blob/4.2.0/.github/workflows/build-windows.yml)はCUDA 13.2とBlackwell対応を含み、配布された実行ファイルにも対応するGPUコードが入っています。
+
+2026年9月6日に、RTX 5080・ドライバー616.56で公式ZIPを検証しました。ローカルCUDAや自前ビルドのDLL検索パスを使わず、合成ERP画像3枚でGPU SIFT特徴抽出と標準GPUマッチングが成功しています。実写シーン全体のSfM、GPUバンドル調整、密な復元はこの検証の対象外です。COLMAPのビルドに使われたCUDAの版数に合わせて、このアプリのマスク生成用Python環境を変更する必要はありません。
+
+#### SfM品質の選び方
+
+まず `標準` を使い、短時間の試行には `軽量` を選びます。`クオリティ` は時間をかけて復元し、Guided Matchingを有効にします。COLMAP 4.2.0では、回転だけの球面画像組でGuided Matchingが停止する場合があるため、当面は `標準` を推奨します。
+
+再現確認では、ERP画像を横方向に循環シフトした画像組がパノラマと判定された後、CPU・GPUの両方で `Check failed: !effective_camera1.IsSpherical()` により停止しました。これは球面Guided Matchingの問題であり、RTX 50の互換性エラーではありません。同じ4.2.0ソースのRTX 50向け再ビルドや、マッチングをCPUへ切り替えるだけでは解消しません。Guided Matchingを使わない `標準` または `軽量` を選んでください。[公式SIFT実装](https://github.com/colmap/colmap/blob/4.2.0/src/colmap/feature/sift.cc)のhomography分岐に球面カメラのチェックがあります。すべての球面画像組で `クオリティ` が停止するという意味ではありません。
 
 #### 事前検査の内容
 
@@ -73,14 +87,14 @@ COLMAP 4.1は、このルートで使うネイティブ `EQUIRECTANGULAR` カメ
 2. 選択中の特徴抽出・Matcher・Mapperのヘルプを読み、現在のGUI設定に必要なCLIオプションがすべてあることを確認します。
 3. 分離した一時データベースを作り、入力画像1枚でGPU SIFTを実行します。
 
-事前検査が成功すると、ランチャー、選択したCLI契約、同梱ライブラリ、GPU SIFTの起動を組み合わせて使えることを確認できます。ただし、シーンの全画像が登録されることまでは保証しません。球面Mapperは、後段の `sparse/0` 契約を安定させるため、1つの復元コンポーネントだけを作ります。撮影経路が分断される場合は、複数コンポーネントの出力を期待するのではなく、オーバーラップやMatcher設定を見直してください。
+事前検査が成功すると、ランチャー、選択したCLI契約、同梱ライブラリ、GPU SIFTの起動を組み合わせて使えることを確認できます。マッチングや復元処理は実行しないため、上記のGuided Matchingの問題は検出できず、全画像の登録も保証しません。球面Mapperは、後段の `sparse/0` 契約を安定させるため、1つの復元コンポーネントだけを作ります。撮影経路が分断される場合は、複数コンポーネントの出力を期待するのではなく、オーバーラップやMatcher設定を見直してください。
 
-RTX 50系GPUでは古いCUDAビルドがGPU SIFTで止まる場合があります。その場合は、GPUに対応したCUDAアーキテクチャでビルドされたCOLMAPを指定します。
+古いCOLMAPでRTX 50シリーズのCUDAアーキテクチャ不一致が出る場合は、公式4.2.0 CUDA版の `COLMAP.bat` を指定します。その配布版でも続く場合は、NVIDIAドライバーと実行ログを確認してください。
 
 #### 既存プロジェクトを更新する場合
 
 - COLMAP 4.1で成功済みのSparseモデルは、4.2が公開されたという理由だけで再作成する必要はありません。Step 5でそのまま変換できます。
-- 既存のシーン設定はそのまま使えます。公式COLMAP 4.2 Windows版へ移行する場合は、Step 4の欄で新しい `COLMAP.bat` を選びます。
+- 既存のシーン設定はそのまま使えます。公式4.2.0 Windows CUDA版ZIPを新しいフォルダへ展開し、Step 4の欄でその `COLMAP.bat` を選び、球面SfMの品質は `標準` にします。以前のインストールは既存作業用に残せます。
 - 古いアプリ版で未対応の `--Mapper.ba_global_images_ratio` オプションにより停止した場合は、このアプリを更新してStep 4を再実行してください。現在はCOLMAPで対応しているオプションを使います。
 - `bin/colmap.exe` を直接起動して同梱DLLが見つからず停止していた場合は、最上位の `COLMAP.bat` を選ぶか、現在のアプリで再実行してください。現在のアプリは、その実行ファイル選択を配布物のランチャーへ切り替えます。
 

@@ -39,6 +39,8 @@ For Metashape results, export cameras as Agisoft XML and sparse points as Stanfo
 
 Choose this when you want this app to run [COLMAP](https://github.com/colmap/colmap) or GLOMAP without using Metashape.
 
+For Windows, use the [official COLMAP 4.2.0 CUDA ZIP](https://github.com/colmap/colmap/releases/download/4.2.0/colmap-x64-windows-cuda.zip). Extract the ZIP and select its top-level `COLMAP.bat`. It supports RTX 50-series GPUs without a custom build.
+
 - 360° images are expanded into cubemap rigs
 - normal images and normal video frames remain normal cameras
 - mixed sources can be processed in one COLMAP dataset
@@ -54,16 +56,28 @@ Choose this when you want to run SfM on equirectangular 360° images as spherica
 
 #### Select the Launcher and Version
 
-COLMAP is not bundled with this app and is not installed by `setup_windows.bat`. Install or extract COLMAP separately, then use one of these choices:
+COLMAP is not bundled with this app and is not installed by `setup_windows.bat`. Download the [official COLMAP 4.2.0 Windows CUDA ZIP](https://github.com/colmap/colmap/releases/download/4.2.0/colmap-x64-windows-cuda.zip), extract it into a new folder, and select its top-level `COLMAP.bat`. Choose the `cuda` package for this GPU-based route; the `nocuda` package does not provide CUDA processing.
 
 | Installation | Selection in Step 4 |
 | --- | --- |
-| Official Windows ZIP | Select the package's top-level `COLMAP.bat`. This is the recommended choice because it establishes the package library paths. |
+| Official Windows CUDA ZIP | Select the package's top-level `COLMAP.bat`. This is the recommended choice because it establishes the package library paths. |
 | Official Windows `bin/colmap.exe` | You may select it; the app detects the adjacent top-level `COLMAP.bat` and uses that launcher automatically. |
 | Standalone or custom `colmap.exe` | Select it directly only when its runtime libraries are already available. The capability preflight still applies. |
 | COLMAP on `PATH` | Leave the field blank. On Windows, the app searches for `COLMAP.bat` first and then `colmap.exe`. |
 
-COLMAP 4.1 is the supported minimum because it introduced the native `EQUIRECTANGULAR` camera model used by this route. COLMAP 4.2 or newer is recommended, particularly with the `Quality` preset: that preset enables guided matching, and the [COLMAP 4.2 changelog](https://github.com/colmap/colmap/blob/4.2.0/CHANGELOG.rst) includes the corresponding spherical-camera fix. COLMAP 4.1 remains usable for existing projects and the `Fast` / `Standard` presets.
+COLMAP 4.1 is the supported minimum because it introduced the native `EQUIRECTANGULAR` camera model used by this route. Use the official 4.2.0 CUDA package with `Matcher: Sequential` and `SfM Quality: Standard` to start. Existing COLMAP 4.1 projects remain supported.
+
+#### RTX 50-Series Support
+
+The official 4.2.0 Windows CUDA package supports RTX 50-series GPUs. A custom build is not required for this GPU generation. Its [official build configuration](https://github.com/colmap/colmap/blob/4.2.0/.github/workflows/build-windows.yml) uses CUDA 13.2 with Blackwell support, and the distributed executable contains compatible GPU code.
+
+On September 6, 2026, the official ZIP was verified on an RTX 5080 with driver 616.56: GPU SIFT extraction and standard GPU matching succeeded on three synthetic ERP images without using local CUDA or custom-build DLL search paths. This check did not cover a full real-scene reconstruction, GPU bundle adjustment, or dense reconstruction. The CUDA toolkit version used to build COLMAP does not require changing this app's mask-generation Python environment.
+
+#### Choosing SfM Quality
+
+Start with `Standard`; use `Fast` for shorter trial runs. `Quality` spends more time on reconstruction and enables guided matching. In COLMAP 4.2.0, guided matching can stop for spherical image pairs showing pure rotation, so `Standard` is recommended for now.
+
+The reproduced case used horizontally shifted copies of an ERP image. Both CPU and GPU matching stopped with `Check failed: !effective_camera1.IsSpherical()` after the pair was classified as panoramic. This is a spherical guided-matching issue, not an RTX 50 compatibility error; rebuilding the same 4.2.0 source for RTX 50 or switching matching to CPU does not resolve it. Use `Standard` or `Fast`, which leave guided matching disabled. See the [upstream SIFT implementation](https://github.com/colmap/colmap/blob/4.2.0/src/colmap/feature/sift.cc) for the spherical-camera check in the homography branch. This does not mean that every spherical image pair fails in `Quality`.
 
 #### What the Preflight Checks
 
@@ -73,14 +87,14 @@ Before the full SfM run, the app performs these checks in order:
 2. Read the help for the selected feature extractor, matcher, and mapper, then confirm every CLI option required by the current GUI settings is available.
 3. Create an isolated temporary database and run GPU SIFT on one source image.
 
-A successful preflight confirms that the launcher, selected command-line contract, packaged libraries, and GPU SIFT startup work together. It does not guarantee that every image will register in the scene. The spherical mapper intentionally produces one reconstruction component so the downstream `sparse/0` contract stays stable; if the capture separates into disconnected groups, improve overlap or matching rather than expecting several output components.
+A successful preflight confirms that the launcher, selected command-line contract, packaged libraries, and GPU SIFT startup work together. It does not run matching or reconstruction, so it cannot detect the guided-matching issue described above or guarantee that every image will register. The spherical mapper intentionally produces one reconstruction component so the downstream `sparse/0` contract stays stable; if the capture separates into disconnected groups, improve overlap or matching rather than expecting several output components.
 
-On RTX 50-series GPUs, older CUDA builds can fail during GPU SIFT. If that happens, select a COLMAP build made with a CUDA architecture that supports the GPU.
+If an older COLMAP package reports a CUDA architecture mismatch on an RTX 50-series GPU, select the official 4.2.0 CUDA package's `COLMAP.bat`. If the error persists with that package, check the NVIDIA driver and the run log.
 
 #### Updating an Existing Project
 
 - An existing successful COLMAP 4.1 sparse model does not need to be rebuilt only because COLMAP 4.2 is available. Step 5 can continue to convert it.
-- Existing scene settings remain valid. Point the Step 4 field at the new `COLMAP.bat` when moving to the official 4.2 Windows package.
+- Existing scene settings remain valid. Extract the official 4.2.0 Windows CUDA ZIP into a new folder, point the Step 4 field at its `COLMAP.bat`, and use `Standard` quality for spherical SfM. You can keep the previous installation for existing work.
 - If an older app build stopped on the unsupported `--Mapper.ba_global_images_ratio` option, update this app and rerun Step 4. The current command contract uses the supported COLMAP option.
 - If launching `bin/colmap.exe` directly previously failed to find packaged DLLs, select the top-level `COLMAP.bat` or rerun with the current app, which redirects that executable selection to the package launcher.
 
