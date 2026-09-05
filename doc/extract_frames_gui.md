@@ -4,6 +4,14 @@ Step 1 turns 360° video, normal video, or an existing still-image folder into s
 
 Choose a scene folder, then add videos or still-image folders to `Input Sources` on the right. Videos are extracted at the specified interval. Still-image folders are copied into the scene `images/` folder and registered. `Motion` is on by default; it reduces redundant near-duplicate candidates and adds candidates where viewpoint change is useful. Turn `Motion` off when you want faster extraction.
 
+## Required Video Tools
+
+Video extraction requires **FFmpeg 7 or newer and its bundled FFprobe**. If either tool is missing, run `setup_windows.bat` to install the current package through winget. Existing older builds must be updated; for a winget installation, use `winget upgrade --id Gyan.FFmpeg --exact --source winget`, then reopen the terminal and rerun setup.
+
+If you chose executable paths in Step 1, select the updated copies as well. The selected versions are checked before video analysis or changes to existing scene images. Release builds with a recognizable version number are supported. Existing still-image folders can be imported without FFmpeg.
+
+Frame extraction uses FFmpeg's file-backed filter syntax and per-stream frame-rate mode, so it also works with FFmpeg 9, which removed the old options. Large frame selections stay in a temporary file to avoid Windows command-length limits.
+
 ## Extraction Approach
 
 This step is not meant to create as many still images as possible from video. It is a preprocessing step for creating an SfM-friendly image set with enough frames, but not excessive frames.

@@ -22,6 +22,7 @@ from core.extract_sessions import (
     session_matches_video,
     video_identity,
 )
+from core.ffmpeg_runtime import require_ffmpeg_version
 from core.frame_pair_analysis import (
     PAIR_LOW_TEXTURE_SHARPNESS,  # noqa: F401 - re-exported for script-module compatibility
     PAIR_MOTION_BLUR_BASELINE_MIN,  # noqa: F401 - re-exported for script-module compatibility
@@ -266,13 +267,6 @@ def run_cmd_with_ffmpeg_progress(
     )
 
 
-def ensure_binary(path: str, name: str) -> None:
-    proc = run_cmd([path, "-version"], capture=True)
-    if proc.returncode != 0:
-        msg = proc.stderr.strip() if proc.stderr else "not found"
-        raise RuntimeError(f"Failed to execute {name}: {msg}")
-
-
 def probe_video(video_path: Path, ffprobe_bin: str) -> VideoInfo:
     cmd = [
         ffprobe_bin,
@@ -383,7 +377,7 @@ def extract_selected_frames(
 
     out_pattern = str(tmp_dir / f"%08d.{image_ext}")
 
-    # Try filter script first to avoid command-length issues.
+    # FFmpeg 7+ reads the filter from a file, keeping large selections off the command line.
     with tempfile.NamedTemporaryFile("w", suffix=".ffscript", delete=False, encoding="utf-8") as tf:
         tf.write(f"select='{select_expr}'\n")
         filter_script_path = tf.name
@@ -400,9 +394,9 @@ def extract_selected_frames(
             "-y",
             "-i",
             str(video_path),
-            "-filter_script:v",
+            "-/filter:v",
             filter_script_path,
-            "-vsync",
+            "-fps_mode",
             "vfr",
             *quality_args,
             out_pattern,
@@ -416,53 +410,7 @@ def extract_selected_frames(
 
         if proc.returncode != 0:
             raise_if_cancelled(cancel_event)
-            # Fallback when filter_script:v is unsupported by ffmpeg build.
-            cmd = [
-                ffmpeg_bin,
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-nostats",
-                "-progress",
-                "pipe:2",
-                "-y",
-                "-i",
-                str(video_path),
-                "-vf",
-                f"select='{select_expr}'",
-                "-vsync",
-                "vfr",
-                *quality_args,
-                out_pattern,
-            ]
-            proc = run_cmd_with_ffmpeg_progress(
-                cmd,
-                phase="extract",
-                total_items=len(frame_indices),
-                cancel_event=cancel_event,
-            )
-            stderr_text = (proc.stderr or "").lower()
-            if proc.returncode != 0 and "unrecognized option" in stderr_text and "progress" in stderr_text:
-                raise_if_cancelled(cancel_event)
-                cmd = [
-                    ffmpeg_bin,
-                    "-hide_banner",
-                    "-loglevel",
-                    "error",
-                    "-y",
-                    "-i",
-                    str(video_path),
-                    "-vf",
-                    f"select='{select_expr}'",
-                    "-vsync",
-                    "vfr",
-                    *quality_args,
-                    out_pattern,
-                ]
-                proc = run_cmd(cmd, capture=True)
-                raise_if_cancelled(cancel_event)
-            if proc.returncode != 0:
-                raise RuntimeError(f"ffmpeg extraction failed: {proc.stderr.strip()}")
+            raise RuntimeError(f"ffmpeg extraction failed: {proc.stderr.strip()}")
     finally:
         Path(filter_script_path).unlink(missing_ok=True)
 
@@ -1146,9 +1094,9 @@ def run_extract_frames(args: ExtractFramesOptions) -> int:
     report_path = extract_report_path(scene_dir)
 
     try:
-        ensure_binary(args.ffmpeg, "ffmpeg")
+        ffmpeg_version = require_ffmpeg_version(args.ffmpeg, "ffmpeg")
         raise_if_cancelled(args.cancel_event)
-        ensure_binary(args.ffprobe, "ffprobe")
+        ffprobe_version = require_ffmpeg_version(args.ffprobe, "ffprobe")
         raise_if_cancelled(args.cancel_event)
         video_info = probe_video(input_video, args.ffprobe)
         raise_if_cancelled(args.cancel_event)
@@ -1158,6 +1106,8 @@ def run_extract_frames(args: ExtractFramesOptions) -> int:
         print(f"Error: {e}")
         return 1
 
+    print(f"FFmpeg: {ffmpeg_version} ({args.ffmpeg})")
+    print(f"FFprobe: {ffprobe_version} ({args.ffprobe})")
     print(f"Input video: {input_video}")
     print(f"Video: {video_info.width}x{video_info.height} @ {video_info.fps:.3f} fps")
     if video_info.variable_frame_rate:

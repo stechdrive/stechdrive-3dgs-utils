@@ -1369,8 +1369,8 @@ TIPS: dict[str, str] = {
         "Start with Walk: Standard for normal walking footage. Use Walk: Close for nearby walls, exhibits, or furniture; Walk: Wide for parks, plazas, or exteriors with more distant subjects; and Drone: Distant for aerial footage.\n"
         "You can still edit the interval values manually after choosing."
     ),
-    "FFMPEG_PATH": "ffmpeg executable path. 'ffmpeg' works if it's on PATH",
-    "FFPROBE_PATH": "ffprobe executable path. Used for video metadata probing",
+    "FFMPEG_PATH": "Used to extract video frames. Version 7 or newer is required. Run setup to install it if missing",
+    "FFPROBE_PATH": "Used to read video information. Select the copy bundled with FFmpeg 7 or newer",
     "FILENAME_PREFIX": "Output filename prefix. Leave empty to use the video filename",
     "SAMPLE_BTN": "Re-estimate frame count by sampling the video (Auto Interval mode only)",
     "EXPORT_DIR": "Destination folder for keep frames. 'images' triggers in-place processing",

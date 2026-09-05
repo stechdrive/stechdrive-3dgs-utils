@@ -69,6 +69,8 @@ run_gui.bat
 
 The first `setup_windows.bat` run can take a while. It checks Python 3.12, FFmpeg/FFprobe, GPU-oriented Python packages, and prepares missing pieces where it can.
 
+Video extraction requires **FFmpeg 7 or newer and its bundled FFprobe**. Setup installs the current Gyan FFmpeg package through winget if either tool is missing. If an older or unidentifiable build is already on PATH, setup stops with update instructions. For a winget installation, run `winget upgrade --id Gyan.FFmpeg --exact --source winget`, then reopen the terminal and rerun setup. Step 1 also checks the selected executables before processing a video. Importing an existing image sequence does not require FFmpeg.
+
 Python packages are installed into a virtual environment dedicated to this app, so your everyday Python environment is less likely to be affected. After setup completes, normal use is just running `run_gui.bat` to launch the GUI.
 
 ### Setup Details

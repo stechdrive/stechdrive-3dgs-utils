@@ -216,26 +216,42 @@ where ffmpeg >nul 2>&1
 set "FFMPEG_FOUND=!errorlevel!"
 where ffprobe >nul 2>&1
 set "FFPROBE_FOUND=!errorlevel!"
+if not "!FFMPEG_FOUND!!FFPROBE_FOUND!"=="00" (
+    rem A newly installed winget package may not be on this terminal's inherited PATH yet.
+    call :add_winget_ffmpeg_to_path
+    where ffmpeg >nul 2>&1
+    set "FFMPEG_FOUND=!errorlevel!"
+    where ffprobe >nul 2>&1
+    set "FFPROBE_FOUND=!errorlevel!"
+)
 if "!FFMPEG_FOUND!"=="0" if "!FFPROBE_FOUND!"=="0" (
-    set "FFMPEG_SETUP_RESULT=available on PATH"
+    !PYTHON_CMD! -m core.ffmpeg_runtime
+    if errorlevel 1 (
+        echo [ERROR] Update FFmpeg and FFprobe to version 7 or newer, then run setup again.
+        echo [INFO] For a winget installation: winget upgrade --id Gyan.FFmpeg --exact --source winget
+        set "FFMPEG_SETUP_RESULT=failed; FFmpeg/FFprobe 7 or newer is required"
+        set "SETUP_RESULT=failed; FFmpeg/FFprobe runtime check failed"
+        exit /b 1
+    )
+    set "FFMPEG_SETUP_RESULT=version 7 or newer available on PATH"
     exit /b 0
 )
 
-echo [INFO] FFmpeg and FFprobe are required for frame extraction.
+echo [INFO] FFmpeg 7 or newer and its bundled FFprobe are required for frame extraction.
 echo [INFO] FFmpeg or FFprobe was not found on PATH. Trying winget install of FFmpeg...
 where winget >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] winget is not available and FFmpeg/FFprobe is missing.
-    echo [ERROR] Install FFmpeg manually, then run setup_windows.bat again.
+    echo [ERROR] Install FFmpeg 7 or newer with FFprobe manually, then run setup_windows.bat again.
     set "FFMPEG_SETUP_RESULT=failed; FFmpeg/FFprobe is missing and winget is unavailable"
     set "SETUP_RESULT=failed; FFmpeg/FFprobe is missing"
     exit /b 1
 )
 
-winget install --id Gyan.FFmpeg --source winget --accept-package-agreements --accept-source-agreements
+winget install --id Gyan.FFmpeg --exact --source winget --accept-package-agreements --accept-source-agreements
 if errorlevel 1 (
     echo [ERROR] winget failed to install FFmpeg.
-    echo [ERROR] Run manually: winget install --id Gyan.FFmpeg --source winget
+    echo [ERROR] Run manually: winget install --id Gyan.FFmpeg --exact --source winget
     set "FFMPEG_SETUP_RESULT=failed; winget could not install FFmpeg"
     set "SETUP_RESULT=failed; winget could not install FFmpeg"
     exit /b 1
@@ -260,6 +276,14 @@ if not "!FFPROBE_FOUND!"=="0" (
     set "SETUP_RESULT=failed; ffprobe.exe was not found after install"
     exit /b 1
 )
+%PYTHON_CMD% -m core.ffmpeg_runtime
+if errorlevel 1 (
+    echo [ERROR] The installed FFmpeg/FFprobe runtime did not pass the version 7+ check.
+    echo [ERROR] Open a new terminal and check PATH for older FFmpeg copies, then run setup again.
+    set "FFMPEG_SETUP_RESULT=failed; installed FFmpeg/FFprobe runtime check failed"
+    set "SETUP_RESULT=failed; installed FFmpeg/FFprobe runtime check failed"
+    exit /b 1
+)
 set "FFMPEG_SETUP_RESULT=installed with winget"
 exit /b 0
 
@@ -267,10 +291,17 @@ exit /b 0
 if exist "%LocalAppData%\Microsoft\WinGet\Links" (
     set "PATH=%LocalAppData%\Microsoft\WinGet\Links;%PATH%"
 )
+%PYTHON_CMD% -m core.ffmpeg_runtime >nul 2>&1
+if not errorlevel 1 exit /b 0
 set "FFMPEG_BIN="
 if exist "%LocalAppData%\Microsoft\WinGet\Packages" (
-    for /f "delims=" %%F in ('where /R "%LocalAppData%\Microsoft\WinGet\Packages" ffmpeg.exe 2^>nul') do (
-        if not defined FFMPEG_BIN set "FFMPEG_BIN=%%~dpF"
+    for /d %%P in ("%LocalAppData%\Microsoft\WinGet\Packages\Gyan.FFmpeg_*") do (
+        for /f "delims=" %%F in ('where /R "%%~fP" ffmpeg.exe 2^>nul') do (
+            if not defined FFMPEG_BIN if exist "%%~dpFffprobe.exe" (
+                !PYTHON_CMD! -m core.ffmpeg_runtime --ffmpeg "%%~fF" --ffprobe "%%~dpFffprobe.exe" >nul 2>&1
+                if not errorlevel 1 set "FFMPEG_BIN=%%~dpF"
+            )
+        )
     )
 )
 if defined FFMPEG_BIN set "PATH=!FFMPEG_BIN!;%PATH%"

@@ -179,6 +179,56 @@ def test_ffmpeg_progress_command_terminates_on_cancel() -> None:
         timer.cancel()
 
 
+@pytest.mark.parametrize("image_ext", ["jpg", "png"])
+def test_extract_uses_file_filter_and_preserves_selected_indices(tmp_path: Path, monkeypatch, image_ext: str) -> None:
+    commands = []
+    filter_paths = []
+
+    def run(cmd, **_kwargs):
+        commands.append(cmd)
+        filter_path = Path(cmd[cmd.index("-/filter:v") + 1])
+        filter_paths.append(filter_path)
+        assert filter_path.read_text(encoding="utf-8") == "select='eq(n\\,0)+eq(n\\,4)+eq(n\\,8)'\n"
+        assert cmd[cmd.index("-fps_mode") + 1] == "vfr"
+        assert not {"-vsync", "-filter_script:v", "-vf"}.intersection(cmd)
+        output = Path(cmd[-1]).parent
+        for sequence in range(1, 4):
+            (output / f"{sequence:08d}.{image_ext}").write_bytes(bytes([sequence]))
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    monkeypatch.setattr("core.extract_frames.run_cmd_with_ffmpeg_progress", run)
+    output = tmp_path / "images with spaces"
+    assert extract_selected_frames(tmp_path / "video with spaces.mp4", "ffmpeg", [0, 4, 8], output, image_ext, 2, "clip", 2) == [0, 4, 8]
+    assert len(commands) == 1
+    assert [p.name for p in sorted(output.iterdir())] == [f"clip_{i:02d}.{image_ext}" for i in (0, 4, 8)]
+    assert all(not p.exists() for p in filter_paths)
+
+
+@pytest.mark.parametrize("cancelled", [False, True])
+def test_large_selection_never_falls_back_to_inline_filter_and_cleans_script(tmp_path: Path, monkeypatch, cancelled: bool) -> None:
+    commands = []
+    filter_paths = []
+
+    def run(cmd, **_kwargs):
+        commands.append(cmd)
+        script = Path(cmd[cmd.index("-/filter:v") + 1])
+        filter_paths.append(script)
+        assert len(script.read_text(encoding="utf-8")) > 32767
+        assert len(subprocess.list2cmdline(cmd)) < 4096
+        if cancelled:
+            raise AppJobCancelled()
+        return subprocess.CompletedProcess(cmd, 1, "", "decoder failure")
+
+    monkeypatch.setattr("core.extract_frames.run_cmd_with_ffmpeg_progress", run)
+    error_type = AppJobCancelled if cancelled else RuntimeError
+    with pytest.raises(error_type) as error:
+        extract_selected_frames(tmp_path / "input.mp4", "ffmpeg", list(range(3000)), tmp_path / "images", "png", 2, "clip", 4)
+    if not cancelled:
+        assert "decoder failure" in str(error.value)
+    assert len(commands) == 1
+    assert all(not p.exists() for p in filter_paths)
+
+
 def test_staged_replace_keeps_existing_frames_until_commit(tmp_path: Path, monkeypatch) -> None:
     def fake_run_cmd_with_ffmpeg_progress(cmd: list[str], **_kwargs) -> subprocess.CompletedProcess:
         out_pattern = Path(cmd[-1])

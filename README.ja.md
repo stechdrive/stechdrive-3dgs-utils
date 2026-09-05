@@ -69,6 +69,8 @@ run_gui.bat
 
 初回の `setup_windows.bat` は少し時間がかかります。Python 3.12、FFmpeg/FFprobe、GPU向けのPythonパッケージなどを確認し、不足しているものをできる範囲で準備します。
 
+動画のフレーム抽出には **FFmpeg 7以降と同梱のFFprobe** が必要です。どちらかが未導入なら、セットアップがwinget経由で現在のGyan FFmpegパッケージをインストールします。PATH上に古い版やバージョンを判定できないビルドがある場合は、更新方法を案内して停止します。wingetで導入した場合は `winget upgrade --id Gyan.FFmpeg --exact --source winget` を実行し、ターミナルを開き直してからセットアップを再実行してください。Step 1でも動画処理の開始前に、選択された実行ファイルを確認します。既存の連番静止画を取り込む場合はFFmpegを必要としません。
+
 Pythonパッケージはこのアプリ専用の仮想環境に入れるため、普段使っているPython環境を汚しにくい構成です。セットアップ完了後は、通常 `run_gui.bat` を実行するだけでGUIを起動できます。
 
 ### セットアップ内容
