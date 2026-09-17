@@ -12,6 +12,8 @@ If you chose executable paths in Step 1, select the updated copies as well. The 
 
 Frame extraction uses FFmpeg's file-backed filter syntax and per-stream frame-rate mode, so it also works with FFmpeg 9, which removed the old options. Large frame selections stay in a temporary file to avoid Windows command-length limits.
 
+Large selections also avoid FFmpeg's expression-depth limit without changing which frames are extracted. If an older app version finishes analysis but stops before extraction with a select-expression error and `Cannot allocate memory`, update the app to v1.25.6 or newer. That error can be caused by the selection expression rather than insufficient GPU memory.
+
 ## Extraction Approach
 
 This step is not meant to create as many still images as possible from video. It is a preprocessing step for creating an SfM-friendly image set with enough frames, but not excessive frames.

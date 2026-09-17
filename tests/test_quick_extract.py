@@ -188,7 +188,7 @@ def test_extract_uses_file_filter_and_preserves_selected_indices(tmp_path: Path,
         commands.append(cmd)
         filter_path = Path(cmd[cmd.index("-/filter:v") + 1])
         filter_paths.append(filter_path)
-        assert filter_path.read_text(encoding="utf-8") == "select='eq(n\\,0)+eq(n\\,4)+eq(n\\,8)'\n"
+        assert filter_path.read_text(encoding="utf-8") == "select='((eq(n\\,0)+eq(n\\,4))+eq(n\\,8))'\n"
         assert cmd[cmd.index("-fps_mode") + 1] == "vfr"
         assert not {"-vsync", "-filter_script:v", "-vf"}.intersection(cmd)
         output = Path(cmd[-1]).parent

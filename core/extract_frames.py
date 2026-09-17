@@ -346,7 +346,16 @@ def select_fixed(total_frames: int, fps: float, interval_sec: float) -> tuple[li
 
 
 def build_select_expr(frame_indices: list[int]) -> str:
-    return "+".join(f"eq(n\\,{idx})" for idx in frame_indices)
+    # Keep FFmpeg's expression parser depth logarithmic for large selections.
+    terms = [f"eq(n\\,{idx})" for idx in frame_indices]
+    if not terms:
+        return "0"
+    while len(terms) > 1:
+        terms = [
+            f"({terms[i]}+{terms[i + 1]})" if i + 1 < len(terms) else terms[i]
+            for i in range(0, len(terms), 2)
+        ]
+    return terms[0]
 
 
 def extract_selected_frames(
